@@ -1,0 +1,15 @@
+## .NET
+bin/
+obj/
+*.user
+
+## Visual Studio / Rider
+.vs/
+.idea/
+
+## Logs
+KnappMiddleware/logs/
+*.log
+
+## Claude Code local settings
+.claude/settings.local.json
