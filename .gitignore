@@ -8,7 +8,7 @@ obj/
 .idea/
 
 ## Logs
-KnappMiddleware/logs/
+KnappMiddleware.Api/logs/
 *.log
 
 ## Claude Code local settings

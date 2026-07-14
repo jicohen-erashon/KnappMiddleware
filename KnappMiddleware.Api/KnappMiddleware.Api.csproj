@@ -17,4 +17,9 @@
     <Folder Include="logs\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\KnappMiddleware.Domain\KnappMiddleware.Domain.csproj" />
+    <ProjectReference Include="..\KnappMiddleware.Infrastructure\KnappMiddleware.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,3 +1,4 @@
+using KnappMiddleware.Infrastructure;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -12,6 +13,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddKnappInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
