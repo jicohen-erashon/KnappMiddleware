@@ -7,7 +7,7 @@ namespace KnappMiddleware.Infrastructure.Postgres;
 public sealed class PostgresUserRepository : IUserRepository
 {
     private const string SelectAllSql = """
-        SELECT username AS "Username", password_hash AS "PasswordHash", enabled AS "Enabled"
+        SELECT username AS "Username", password_hash AS "PasswordHash", role AS "Role", enabled AS "Enabled"
         FROM usuarios
         """;
 
@@ -21,9 +21,13 @@ public sealed class PostgresUserRepository : IUserRepository
     public async Task<IReadOnlyList<UserAccount>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
-        var rows = await connection.QueryAsync<UserAccount>(
+        var rows = await connection.QueryAsync<UserAccountRow>(
             new CommandDefinition(SelectAllSql, cancellationToken: cancellationToken));
 
-        return rows.ToList();
+        return rows
+            .Select(r => new UserAccount(r.Username, r.PasswordHash, Enum.Parse<UserRole>(r.Role, ignoreCase: true), r.Enabled))
+            .ToList();
     }
+
+    private sealed record UserAccountRow(string Username, string PasswordHash, string Role, bool Enabled);
 }

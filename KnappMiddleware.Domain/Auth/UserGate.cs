@@ -18,15 +18,22 @@ public sealed class UserGate : IUserGate
         _hasher = hasher;
     }
 
-    public bool TryAuthenticate(string username, string password)
+    public bool TryAuthenticate(string username, string password, out UserRole role)
     {
         ArgumentNullException.ThrowIfNull(username);
         ArgumentNullException.ThrowIfNull(password);
 
         var snapshot = Volatile.Read(ref _snapshot);
-        return snapshot.TryGetValue(username, out var account)
+        if (snapshot.TryGetValue(username, out var account)
             && account.Enabled
-            && _hasher.Verify(password, account.PasswordHash);
+            && _hasher.Verify(password, account.PasswordHash))
+        {
+            role = account.Role;
+            return true;
+        }
+
+        role = default;
+        return false;
     }
 
     public async Task ReloadAsync(CancellationToken cancellationToken = default)

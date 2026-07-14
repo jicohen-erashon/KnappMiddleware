@@ -1,5 +1,7 @@
+using KnappMiddleware.Api.Auth;
 using KnappMiddleware.Infrastructure.Configuration;
 using KnappMiddleware.Infrastructure.Sftp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -12,6 +14,7 @@ namespace KnappMiddleware.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("sftp-file")]
+[Authorize(Policy = AuthorizationPolicies.SapOrSuperUsuario)]
 public sealed class SftpFileController : ControllerBase
 {
     private const long AlbaranMaxBytes = 40 * 1024;

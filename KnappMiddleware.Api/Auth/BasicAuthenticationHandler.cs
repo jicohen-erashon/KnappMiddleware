@@ -60,7 +60,7 @@ public sealed class BasicAuthenticationHandler : AuthenticationHandler<Authentic
             return Task.FromResult(AuthenticateResult.Fail("Encabezado Authorization con formato inválido."));
         }
 
-        if (!_userGate.TryAuthenticate(username, password))
+        if (!_userGate.TryAuthenticate(username, password, out var role))
         {
             Logger.LogWarning(
                 "Intento de autenticación fallido para el usuario {Username} desde {RemoteIp}.",
@@ -69,7 +69,9 @@ public sealed class BasicAuthenticationHandler : AuthenticationHandler<Authentic
             return Task.FromResult(AuthenticateResult.Fail("Usuario o contraseña inválidos."));
         }
 
-        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, username)], Scheme.Name);
+        var identity = new ClaimsIdentity(
+            [new Claim(ClaimTypes.Name, username), new Claim(ClaimTypes.Role, role.ToString())],
+            Scheme.Name);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name);
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }

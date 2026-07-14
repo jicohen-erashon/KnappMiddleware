@@ -24,76 +24,88 @@ public class UserGateTests
     {
         var gate = new UserGate(new FakeUserRepository(), new FakePasswordHasher());
 
-        Assert.False(gate.TryAuthenticate("sap", "secret"));
+        Assert.False(gate.TryAuthenticate("sap", "secret", out _));
     }
 
     [Fact]
     public async Task TryAuthenticate_UnknownUser_Fails()
     {
         var repository = new FakeUserRepository();
-        repository.Accounts.Add(new UserAccount("sap", "SECRET", Enabled: true));
+        repository.Accounts.Add(new UserAccount("sap", "SECRET", UserRole.Sap, Enabled: true));
         var gate = new UserGate(repository, new FakePasswordHasher());
         await gate.ReloadAsync();
 
-        Assert.False(gate.TryAuthenticate("other", "secret"));
+        Assert.False(gate.TryAuthenticate("other", "secret", out _));
     }
 
     [Fact]
     public async Task TryAuthenticate_WrongPassword_Fails()
     {
         var repository = new FakeUserRepository();
-        repository.Accounts.Add(new UserAccount("sap", "SECRET", Enabled: true));
+        repository.Accounts.Add(new UserAccount("sap", "SECRET", UserRole.Sap, Enabled: true));
         var gate = new UserGate(repository, new FakePasswordHasher());
         await gate.ReloadAsync();
 
-        Assert.False(gate.TryAuthenticate("sap", "wrong"));
+        Assert.False(gate.TryAuthenticate("sap", "wrong", out _));
     }
 
     [Fact]
     public async Task TryAuthenticate_DisabledUser_Fails()
     {
         var repository = new FakeUserRepository();
-        repository.Accounts.Add(new UserAccount("sap", "SECRET", Enabled: false));
+        repository.Accounts.Add(new UserAccount("sap", "SECRET", UserRole.Sap, Enabled: false));
         var gate = new UserGate(repository, new FakePasswordHasher());
         await gate.ReloadAsync();
 
-        Assert.False(gate.TryAuthenticate("sap", "secret"));
+        Assert.False(gate.TryAuthenticate("sap", "secret", out _));
     }
 
     [Fact]
     public async Task TryAuthenticate_EnabledUserWithMatchingPassword_Succeeds()
     {
         var repository = new FakeUserRepository();
-        repository.Accounts.Add(new UserAccount("sap", "SECRET", Enabled: true));
+        repository.Accounts.Add(new UserAccount("sap", "SECRET", UserRole.Sap, Enabled: true));
         var gate = new UserGate(repository, new FakePasswordHasher());
         await gate.ReloadAsync();
 
-        Assert.True(gate.TryAuthenticate("sap", "secret"));
+        Assert.True(gate.TryAuthenticate("sap", "secret", out _));
+    }
+
+    [Fact]
+    public async Task TryAuthenticate_Succeeds_ReturnsAccountRole()
+    {
+        var repository = new FakeUserRepository();
+        repository.Accounts.Add(new UserAccount("admin", "SECRET", UserRole.SuperUsuario, Enabled: true));
+        var gate = new UserGate(repository, new FakePasswordHasher());
+        await gate.ReloadAsync();
+
+        Assert.True(gate.TryAuthenticate("admin", "secret", out var role));
+        Assert.Equal(UserRole.SuperUsuario, role);
     }
 
     [Fact]
     public async Task TryAuthenticate_UsernameIsCaseSensitive()
     {
         var repository = new FakeUserRepository();
-        repository.Accounts.Add(new UserAccount("sap", "SECRET", Enabled: true));
+        repository.Accounts.Add(new UserAccount("sap", "SECRET", UserRole.Sap, Enabled: true));
         var gate = new UserGate(repository, new FakePasswordHasher());
         await gate.ReloadAsync();
 
-        Assert.False(gate.TryAuthenticate("SAP", "secret"));
+        Assert.False(gate.TryAuthenticate("SAP", "secret", out _));
     }
 
     [Fact]
     public async Task ReloadAsync_ReplacesPreviousSnapshotEntirely()
     {
         var repository = new FakeUserRepository();
-        repository.Accounts.Add(new UserAccount("sap", "SECRET", Enabled: true));
+        repository.Accounts.Add(new UserAccount("sap", "SECRET", UserRole.Sap, Enabled: true));
         var gate = new UserGate(repository, new FakePasswordHasher());
         await gate.ReloadAsync();
 
         repository.Accounts.Clear();
         await gate.ReloadAsync();
 
-        Assert.False(gate.TryAuthenticate("sap", "secret"));
+        Assert.False(gate.TryAuthenticate("sap", "secret", out _));
     }
 
     [Fact]
@@ -101,6 +113,6 @@ public class UserGateTests
     {
         var gate = new UserGate(new FakeUserRepository(), new FakePasswordHasher());
 
-        Assert.Throws<ArgumentNullException>(() => gate.TryAuthenticate(null!, "secret"));
+        Assert.Throws<ArgumentNullException>(() => gate.TryAuthenticate(null!, "secret", out _));
     }
 }
