@@ -43,10 +43,18 @@ public sealed class AuditController : ControllerBase
     }
 
     [HttpPut("toggle")]
-    public IActionResult Toggle([FromBody] AuditToggleRequest request)
+    public async Task<IActionResult> Toggle([FromBody] AuditToggleRequest request, CancellationToken cancellationToken)
     {
-        _toggle.SetEnabled(request.Enabled);
-        return Ok(new { enabled = _toggle.IsEnabled });
+        try
+        {
+            await _toggle.SetEnabledAsync(request.Enabled, cancellationToken);
+            return Ok(new { enabled = _toggle.IsEnabled });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo actualizar el flag de auditoría.");
+            return Problem(detail: ex.Message, statusCode: StatusCodes.Status502BadGateway, title: "No se pudo actualizar el flag de auditoría.");
+        }
     }
 }
 

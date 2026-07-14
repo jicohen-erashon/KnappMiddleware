@@ -1,4 +1,7 @@
+using KnappMiddleware.Api.Auth;
 using KnappMiddleware.Infrastructure;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -15,6 +18,14 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddKnappInfrastructure(builder.Configuration);
 
+// HTTP Basic sobre todo el canal SAP-facing (spec sección 10); /health queda excluido vía [AllowAnonymous].
+builder.Services.AddAuthentication(BasicAuthenticationHandler.SchemeName)
+    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>(BasicAuthenticationHandler.SchemeName, options => { });
+builder.Services.AddAuthorization(options =>
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build());
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -29,6 +40,7 @@ app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

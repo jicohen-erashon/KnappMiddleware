@@ -19,8 +19,8 @@ public sealed class MaintenanceController : ControllerBase
         _logger = logger;
     }
 
-    // Acción destructiva: descarta todos los mensajes pendientes de la cola FIFO. Sin autenticación
-    // todavía (fase /authenticate pendiente) — cualquier caller puede invocarla mientras eso no exista.
+    // Acción destructiva: descarta todos los mensajes pendientes de la cola FIFO. Protegida por el
+    // esquema Basic global (ver Program.cs) igual que el resto de la Api salvo /health.
     [HttpPost("clear")]
     public async Task<IActionResult> Clear(CancellationToken cancellationToken)
     {

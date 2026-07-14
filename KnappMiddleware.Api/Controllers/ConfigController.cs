@@ -1,4 +1,5 @@
 using KnappMiddleware.Domain.Auditing;
+using KnappMiddleware.Domain.Configuration;
 using KnappMiddleware.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -16,6 +17,8 @@ public sealed class ConfigController : ControllerBase
     private readonly IOptions<KiSoftEventChannelOptions> _eventChannel;
     private readonly IOptions<AuditOptions> _audit;
     private readonly IAuditToggle _auditToggle;
+    private readonly IConfigGate _configGate;
+    private readonly ILogger<ConfigController> _logger;
 
     public ConfigController(
         IOptions<RabbitMqOptions> rabbitMq,
@@ -24,7 +27,9 @@ public sealed class ConfigController : ControllerBase
         IOptions<KiSoftOrderChannelOptions> orderChannel,
         IOptions<KiSoftEventChannelOptions> eventChannel,
         IOptions<AuditOptions> audit,
-        IAuditToggle auditToggle)
+        IAuditToggle auditToggle,
+        IConfigGate configGate,
+        ILogger<ConfigController> logger)
     {
         _rabbitMq = rabbitMq;
         _inventorySftp = inventorySftp;
@@ -33,6 +38,23 @@ public sealed class ConfigController : ControllerBase
         _eventChannel = eventChannel;
         _audit = audit;
         _auditToggle = auditToggle;
+        _configGate = configGate;
+        _logger = logger;
+    }
+
+    [HttpPost("reload")]
+    public async Task<IActionResult> Reload(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _configGate.ReloadAsync(cancellationToken);
+            return Ok(new { reloaded = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo recargar la configuración.");
+            return Problem(detail: ex.Message, statusCode: StatusCodes.Status502BadGateway, title: "No se pudo recargar la configuración.");
+        }
     }
 
     // Nunca incluye credenciales (passwords, connection strings): solo lo necesario para diagnosticar.

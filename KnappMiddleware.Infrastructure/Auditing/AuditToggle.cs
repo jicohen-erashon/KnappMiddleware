@@ -1,4 +1,5 @@
 using KnappMiddleware.Domain.Auditing;
+using KnappMiddleware.Domain.Configuration;
 using KnappMiddleware.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
 
@@ -6,14 +7,24 @@ namespace KnappMiddleware.Infrastructure.Auditing;
 
 public sealed class AuditToggle : IAuditToggle
 {
-    private volatile bool _enabled;
+    private const string AuditEnabledKey = "audit.enabled";
 
-    public AuditToggle(IOptions<AuditOptions> options)
+    private readonly IConfigGate _configGate;
+    private readonly IConfigRepository _configRepository;
+    private readonly bool _fallbackDefault;
+
+    public AuditToggle(IConfigGate configGate, IConfigRepository configRepository, IOptions<AuditOptions> options)
     {
-        _enabled = options.Value.Enabled;
+        _configGate = configGate;
+        _configRepository = configRepository;
+        _fallbackDefault = options.Value.Enabled;
     }
 
-    public bool IsEnabled => _enabled;
+    public bool IsEnabled => _configGate.GetBool(AuditEnabledKey, _fallbackDefault);
 
-    public void SetEnabled(bool enabled) => _enabled = enabled;
+    public async Task SetEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    {
+        await _configRepository.SetValueAsync(AuditEnabledKey, enabled.ToString(), cancellationToken);
+        await _configGate.ReloadAsync(cancellationToken);
+    }
 }

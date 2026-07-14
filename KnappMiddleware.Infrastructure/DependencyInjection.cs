@@ -1,6 +1,9 @@
 using KnappMiddleware.Domain.Auditing;
+using KnappMiddleware.Domain.Auth;
+using KnappMiddleware.Domain.Configuration;
 using KnappMiddleware.Domain.Matrix;
 using KnappMiddleware.Infrastructure.Auditing;
+using KnappMiddleware.Infrastructure.Auth;
 using KnappMiddleware.Infrastructure.Configuration;
 using KnappMiddleware.Infrastructure.Postgres;
 using KnappMiddleware.Infrastructure.RabbitMq;
@@ -56,6 +59,15 @@ public static class DependencyInjection
         services.AddSingleton<IMatrixRepository, PostgresMatrixRepository>();
         services.AddSingleton<IMatrixGate, MatrixGate>();
         services.AddHostedService<MatrixGateStartupService>();
+
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddSingleton<IUserRepository, PostgresUserRepository>();
+        services.AddSingleton<IUserGate, UserGate>();
+        services.AddHostedService<UserGateStartupService>();
+
+        services.AddSingleton<IConfigRepository, PostgresConfigRepository>();
+        services.AddSingleton<IConfigGate, ConfigGate>();
+        services.AddHostedService<ConfigGateStartupService>();
 
         services.AddSingleton<IAuditToggle, AuditToggle>();
         services.AddSingleton<AuditWriter>();
