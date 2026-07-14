@@ -9,6 +9,9 @@ public interface IConfigGate
     /// <summary>Valor booleano asociado a la clave; si no existe o no parsea, retorna <paramref name="defaultValue"/>.</summary>
     bool GetBool(string clave, bool defaultValue);
 
+    /// <summary>Valor entero asociado a la clave; si no existe o no parsea, retorna <paramref name="defaultValue"/>.</summary>
+    int GetInt(string clave, int defaultValue);
+
     /// <summary>Recarga el snapshot en memoria desde <see cref="IConfigRepository"/>. Seguro de llamar mientras hay lecturas en curso.</summary>
     Task ReloadAsync(CancellationToken cancellationToken = default);
 }

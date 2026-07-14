@@ -38,8 +38,6 @@ public static class DependencyInjection
         services.AddOptions<PostgresOptions>()
             .Bind(configuration.GetSection(PostgresOptions.SectionName))
             .ValidateOnStart();
-        services.AddOptions<AuditOptions>()
-            .Bind(configuration.GetSection(AuditOptions.SectionName));
 
         services.AddSingleton<RabbitMqConnectionManager>();
         services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();

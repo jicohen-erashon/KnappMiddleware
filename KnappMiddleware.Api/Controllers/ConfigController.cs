@@ -10,12 +10,14 @@ namespace KnappMiddleware.Api.Controllers;
 [Route("config")]
 public sealed class ConfigController : ControllerBase
 {
+    private const string AuditQueueCapacityKey = "audit.queueCapacity";
+    private const int DefaultAuditQueueCapacity = 10_000;
+
     private readonly IOptions<RabbitMqOptions> _rabbitMq;
     private readonly IOptions<InventorySftpOptions> _inventorySftp;
     private readonly IOptions<PrintSftpOptions> _printSftp;
     private readonly IOptions<KiSoftOrderChannelOptions> _orderChannel;
     private readonly IOptions<KiSoftEventChannelOptions> _eventChannel;
-    private readonly IOptions<AuditOptions> _audit;
     private readonly IAuditToggle _auditToggle;
     private readonly IConfigGate _configGate;
     private readonly ILogger<ConfigController> _logger;
@@ -26,7 +28,6 @@ public sealed class ConfigController : ControllerBase
         IOptions<PrintSftpOptions> printSftp,
         IOptions<KiSoftOrderChannelOptions> orderChannel,
         IOptions<KiSoftEventChannelOptions> eventChannel,
-        IOptions<AuditOptions> audit,
         IAuditToggle auditToggle,
         IConfigGate configGate,
         ILogger<ConfigController> logger)
@@ -36,7 +37,6 @@ public sealed class ConfigController : ControllerBase
         _printSftp = printSftp;
         _orderChannel = orderChannel;
         _eventChannel = eventChannel;
-        _audit = audit;
         _auditToggle = auditToggle;
         _configGate = configGate;
         _logger = logger;
@@ -78,7 +78,7 @@ public sealed class ConfigController : ControllerBase
             inventory = new { host = _inventorySftp.Value.Host, port = _inventorySftp.Value.Port },
             print = new { host = _printSftp.Value.Host, port = _printSftp.Value.Port }
         },
-        audit = new { enabled = _auditToggle.IsEnabled, queueCapacity = _audit.Value.QueueCapacity }
+        audit = new { enabled = _auditToggle.IsEnabled, queueCapacity = _configGate.GetInt(AuditQueueCapacityKey, DefaultAuditQueueCapacity) }
     });
 
     private static object ChannelSummary(KiSoftTcpChannelOptions options) => new

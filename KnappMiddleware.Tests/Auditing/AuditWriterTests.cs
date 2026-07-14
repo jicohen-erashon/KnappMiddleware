@@ -1,8 +1,6 @@
 using KnappMiddleware.Domain.Auditing;
 using KnappMiddleware.Domain.Configuration;
 using KnappMiddleware.Infrastructure.Auditing;
-using KnappMiddleware.Infrastructure.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace KnappMiddleware.Tests.Auditing;
 
@@ -10,11 +8,16 @@ public class AuditWriterTests
 {
     private sealed class FakeConfigRepository : IConfigRepository
     {
-        public Task<IReadOnlyList<ConfigEntry>> GetAllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<ConfigEntry>>([]);
+        public Dictionary<string, string> Values { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-        public Task SetValueAsync(string clave, string valor, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
+        public Task<IReadOnlyList<ConfigEntry>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ConfigEntry>>(Values.Select(kv => new ConfigEntry(kv.Key, kv.Value)).ToList());
+
+        public Task SetValueAsync(string clave, string valor, CancellationToken cancellationToken = default)
+        {
+            Values[clave] = valor;
+            return Task.CompletedTask;
+        }
     }
 
     private static AuditRecord BuildRecord() =>
@@ -23,8 +26,12 @@ public class AuditWriterTests
     private static AuditWriter BuildWriter(bool enabled, int queueCapacity = 10)
     {
         var repository = new FakeConfigRepository();
-        var toggle = new AuditToggle(new ConfigGate(repository), repository, Options.Create(new AuditOptions { Enabled = enabled }));
-        return new(toggle, Options.Create(new AuditOptions { QueueCapacity = queueCapacity }));
+        repository.Values["audit.enabled"] = enabled.ToString();
+        repository.Values["audit.queueCapacity"] = queueCapacity.ToString();
+        var gate = new ConfigGate(repository);
+        gate.ReloadAsync().GetAwaiter().GetResult();
+        var toggle = new AuditToggle(gate, repository);
+        return new(toggle, gate);
     }
 
     [Fact]

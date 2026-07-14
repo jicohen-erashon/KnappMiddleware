@@ -1,7 +1,5 @@
 using KnappMiddleware.Domain.Configuration;
 using KnappMiddleware.Infrastructure.Auditing;
-using KnappMiddleware.Infrastructure.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace KnappMiddleware.Tests.Auditing;
 
@@ -21,25 +19,23 @@ public class AuditToggleTests
         }
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void IsEnabled_WithoutDbValue_FallsBackToOptions(bool enabled)
+    [Fact]
+    public void IsEnabled_WithoutDbValue_FallsBackToHardcodedDefault()
     {
         var repository = new FakeConfigRepository();
-        var toggle = new AuditToggle(new ConfigGate(repository), repository, Options.Create(new AuditOptions { Enabled = enabled }));
+        var toggle = new AuditToggle(new ConfigGate(repository), repository);
 
-        Assert.Equal(enabled, toggle.IsEnabled);
+        Assert.False(toggle.IsEnabled);
     }
 
     [Fact]
-    public async Task IsEnabled_PrefersDbValueOverOptionsFallback()
+    public async Task IsEnabled_ReflectsDbValue()
     {
         var repository = new FakeConfigRepository();
         repository.Values["audit.enabled"] = "true";
         var gate = new ConfigGate(repository);
         await gate.ReloadAsync();
-        var toggle = new AuditToggle(gate, repository, Options.Create(new AuditOptions { Enabled = false }));
+        var toggle = new AuditToggle(gate, repository);
 
         Assert.True(toggle.IsEnabled);
     }
@@ -49,7 +45,7 @@ public class AuditToggleTests
     {
         var repository = new FakeConfigRepository();
         var gate = new ConfigGate(repository);
-        var toggle = new AuditToggle(gate, repository, Options.Create(new AuditOptions { Enabled = false }));
+        var toggle = new AuditToggle(gate, repository);
 
         await toggle.SetEnabledAsync(true);
 

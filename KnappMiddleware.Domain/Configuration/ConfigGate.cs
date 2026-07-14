@@ -29,6 +29,12 @@ public sealed class ConfigGate : IConfigGate
         return valor is not null && bool.TryParse(valor, out var parsed) ? parsed : defaultValue;
     }
 
+    public int GetInt(string clave, int defaultValue)
+    {
+        var valor = GetValue(clave);
+        return valor is not null && int.TryParse(valor, out var parsed) ? parsed : defaultValue;
+    }
+
     public async Task ReloadAsync(CancellationToken cancellationToken = default)
     {
         var entries = await _repository.GetAllAsync(cancellationToken);
