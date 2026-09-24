@@ -36,7 +36,7 @@ public sealed class EscritorTelegrama
     /// <summary>Campo de una sola ocurrencia: prefijo de longitud fijo (siempre <paramref name="length"/>) + valor.</summary>
     public EscritorTelegrama Field(int lengthDigits, int length, TipoCampo kind, string? value)
     {
-        _sb.Append(length.ToString(CultureInfo.InvariantCulture).PadLeft(lengthDigits, '0'));
+        LengthPrefix(lengthDigits, length);
         _sb.Append(CodecValorTelegrama.Encode(kind, length, value));
         return this;
     }
@@ -45,10 +45,27 @@ public sealed class EscritorTelegrama
     public EscritorTelegrama OptionalField(int lengthDigits, int length, TipoCampo kind, string? value) =>
         string.IsNullOrEmpty(value) ? Field(lengthDigits, 0, kind, null) : Field(lengthDigits, length, kind, value);
 
-    /// <summary>Escribe solo el prefijo de longitud (para contadores de LOOP o anchuras de columna declaradas antes del loop).</summary>
+    /// <summary>
+    /// Escribe solo el prefijo de longitud (para contadores de LOOP o anchuras de columna declaradas
+    /// antes del loop). Si el valor no cabe en <paramref name="lengthDigits"/> dígitos se lanza, en vez
+    /// de emitir un dígito de más y desalinear en silencio todo el resto del registro — simétrico con
+    /// <see cref="CodecValorTelegrama"/>, que ya rechaza los VALORES demasiado largos.
+    /// </summary>
     public EscritorTelegrama LengthPrefix(int lengthDigits, int value)
     {
-        _sb.Append(value.ToString(CultureInfo.InvariantCulture).PadLeft(lengthDigits, '0'));
+        if (value < 0)
+        {
+            throw new ExcepcionFormatoTelegrama($"Prefijo de longitud negativo: {value}.");
+        }
+
+        var digits = value.ToString(CultureInfo.InvariantCulture);
+        if (digits.Length > lengthDigits)
+        {
+            throw new ExcepcionFormatoTelegrama(
+                $"El prefijo de longitud '{digits}' ({digits.Length} dígitos) excede los dígitos declarados ({lengthDigits}).");
+        }
+
+        _sb.Append(digits.PadLeft(lengthDigits, '0'));
         return this;
     }
 

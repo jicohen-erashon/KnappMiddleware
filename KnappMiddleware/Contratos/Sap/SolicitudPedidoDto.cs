@@ -136,6 +136,9 @@ public sealed class SolicitudPedidoDto : SobreTelegramaSapDto
     [JsonPropertyName("parameters")]
     public IReadOnlyList<ParametroPedidoDto>? Parameters { get; init; }
 
+    /// <summary>El contador de líneas del LOOP (bloque "b") se transmite en 3 dígitos (ver
+    /// MapeadorTelegramaPedido), de ahí el tope de 999.</summary>
     [JsonPropertyName("items")]
+    [MaxLength(999)]
     public required IReadOnlyList<LineaPedidoDto> Items { get; init; }
 }

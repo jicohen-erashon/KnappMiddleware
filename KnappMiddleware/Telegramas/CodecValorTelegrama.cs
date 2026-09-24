@@ -5,6 +5,8 @@ namespace KnappMiddleware.Telegramas;
 /// sea porque es constante para esta instalación o porque viene de un prefijo de longitud leído del
 /// propio telegrama). Relleno: alfanumérico → espacios a la derecha; numérico → ceros a la izquierda;
 /// fecha vacía → ceros. Las longitudes son número de caracteres, no de bytes (HIS §2.3, nota UTF-8).
+/// Al decodificar, los alfanuméricos se recortan en AMBOS extremos (HIS §2.3: "KiSoft siempre corta
+/// espacios en blanco al principio y al final"), aunque nuestro encode solo rellene a la derecha.
 /// </summary>
 public static class CodecValorTelegrama
 {
@@ -48,7 +50,7 @@ public static class CodecValorTelegrama
     {
         return kind switch
         {
-            TipoCampo.Alfanumerico => raw.TrimEnd(' '),
+            TipoCampo.Alfanumerico => raw.Trim(' '),
             TipoCampo.Numerico => DecodeNumeric(raw),
             TipoCampo.Fecha => raw.Length > 0 && raw.All(c => c == '0') ? string.Empty : raw,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Tipo de campo no soportado.")

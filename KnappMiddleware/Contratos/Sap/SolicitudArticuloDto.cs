@@ -165,8 +165,12 @@ public sealed class SolicitudArticuloDto : ISobreTelegramaSap
     [JsonPropertyName("umweigth")]
     public string? WeightUnit { get; init; }
 
-    /// <summary>HIS pág. 21 ("B", códigos de artículo): LOOP de códigos, ancho 20 cada uno, alfanumérico.</summary>
+    /// <summary>HIS pág. 21 ("B", códigos de artículo): LOOP de códigos, ancho 20 cada uno, alfanumérico.
+    /// El contador del LOOP se transmite en 2 dígitos (ver MapeadorTelegramaArticulo), de ahí el tope
+    /// de 99 (el mapper además filtra entradas en blanco antes de contar, así que 99 es un tope
+    /// superior seguro, no un espejo exacto).</summary>
     [JsonPropertyName("itBarcodes")]
+    [MaxLength(99)]
     public IReadOnlyList<CodigoBarraArticuloDto>? Barcodes { get; init; }
 
     /// <summary>HIS pág. 21 ("K", nombre de artículo): ancho 40, texto libre. HIS=productname; SAP=productdescription.</summary>
@@ -189,8 +193,12 @@ public sealed class SolicitudArticuloDto : ISobreTelegramaSap
     [Range(0, 9999)]
     public int? ReplenishmentMinQty { get; init; }
 
-    /// <summary>HIS pág. 22 ("E", propiedades de artículo): LOOP, ancho 2 cada uno, numérico (01-99).</summary>
+    /// <summary>HIS pág. 22 ("E", propiedades de artículo): LOOP, ancho 2 cada uno, numérico (01-99).
+    /// El contador del LOOP se transmite en 2 dígitos (ver MapeadorTelegramaArticulo), de ahí el tope
+    /// de 99 (el mapper además filtra entradas en blanco antes de contar, así que 99 es un tope
+    /// superior seguro, no un espejo exacto).</summary>
     [JsonPropertyName("itProperties")]
+    [MaxLength(99)]
     public IReadOnlyList<PropiedadArticuloDto>? Properties { get; init; }
 
     /// <summary>HIS pág. 22 ("T", geocódigo de stock de reposición): ancho 12, alfanumérico.</summary>

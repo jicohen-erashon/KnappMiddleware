@@ -46,6 +46,9 @@ public sealed class SolicitudInventarioDto : SobreTelegramaSapDto
     [StringLength(7)]
     public required string InventoryRequestNumber { get; init; }
 
+    /// <summary>El contador de líneas del LOOP (bloque "Y") se transmite en 3 dígitos (ver
+    /// MapeadorTelegramaInventario), de ahí el tope de 999.</summary>
     [JsonPropertyName("items")]
+    [MaxLength(999)]
     public required IReadOnlyList<LineaFiltroInventarioDto> Items { get; init; }
 }

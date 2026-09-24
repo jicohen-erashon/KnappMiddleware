@@ -67,6 +67,9 @@ public sealed class SolicitudUnidadCargaDisponibleDto : SobreTelegramaSapDto
     [StringLength(12)]
     public required string GeoCode { get; init; }
 
+    /// <summary>El contador de líneas del LOOP (bloque "X") se transmite en 2 dígitos (ver
+    /// MapeadorTelegramaUnidadCargaDisponible), de ahí el tope de 99.</summary>
     [JsonPropertyName("items")]
+    [MaxLength(99)]
     public required IReadOnlyList<LineaUnidadCargaDisponibleDto> Items { get; init; }
 }
