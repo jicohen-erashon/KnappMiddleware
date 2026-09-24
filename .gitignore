@@ -20,3 +20,9 @@
 *.pdf
 *.docx
 *.odt
+
+analisis/
+herramientas/
+JSON-SAP/
+
+CONTEXT.md
