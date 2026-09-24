@@ -46,10 +46,13 @@ KnappMiddleware.Tests/        Pruebas unitarias (xUnit) de los mapeadores de tel
 | `POST /api/v1/sap/inventory/realtime/1RR`          | 1RR          | Visualización de inventario en tiempo real|
 | `POST /api/v1/sap/loadunit/modify/1UU`             | 1UU          | Modificar unidad de carga                 |
 | `POST /api/v1/sap/loadunit/available/1UN`          | 1UN          | Unidad de carga disponible                |
+| `POST /api/v1/sap/inventory/stock/1XR`             | 1XR          | Consulta de stock de un artículo en tiempo real |
 | *(evento, no HTTP entrante)*                       | 32R          | KiSoft empuja evento de pedido; el middleware acusa en ≤10s y hace POST fire-and-forget a SAP vía webhook |
 
-`1XR` (consulta de stock de artículo) tiene el layout confirmado en HIS V3 §3.5.2 pero **aún no
-está implementado**.
+`1XR` es un add-on de pago (HIS V3 §3.5.2, "CR16 – 1.1 – Segundo punto") no incluido en el precio
+base — confirmar con KNAPP que esté contratado antes de habilitarlo en producción. A diferencia del
+resto de telegramas, mandante y tipo de stock tienen presencia opcional en la trama (longitud `00`
+si SAP no los envía).
 
 Cada telegrama sigue el mismo patrón: valida contra la matriz de mensajes → traduce el DTO JSON a
 la trama TLV de ancho fijo → la envía por el canal TCP correspondiente → interpreta el estado que
@@ -141,5 +144,5 @@ controller) también se auditan, vía un `InvalidModelStateResponseFactory` dedi
 
 ## Pendientes conocidos
 
-- `1XR` (consulta de stock de artículo): layout confirmado, falta implementar.
+- `1XR`: confirmar con KNAPP si el add-on de pago está contratado antes de habilitarlo en producción.
 - Definir mecanismo de autenticación definitivo del lado SAP→Middleware (hoy Basic Auth).

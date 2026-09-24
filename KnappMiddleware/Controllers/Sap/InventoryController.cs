@@ -240,6 +240,107 @@ public sealed class InventoryController : ControllerBase
         }
     }
 
+    [HttpPost("stock/1XR")]
+    public async Task<IActionResult> PostStock([FromBody] SolicitudConsultaStockDto dto, CancellationToken cancellationToken)
+    {
+        var correlationId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+        var http = AuditHttpContext.From(HttpContext);
+        LogEntrada(correlationId, "1XR", dto, http, dto.ObjectId, dto.TeCreatedBy);
+
+        var estadoSalida = AuditEstado.Gate;
+        string? payloadSalida = null;
+        string? errorSalida = null;
+        IActionResult resultado = null!;
+
+        try
+        {
+            var accion = _matrixGate.Resolve(dto.Mandante, "1XR", dto.Station);
+            if (accion == MatrixAction.Deshabilitado)
+            {
+                _logger.LogWarning("Consulta de stock de {Producto} rechazada: estación {Estacion} deshabilitada por matriz (mandante {Mandante}).",
+                    dto.ProductNumber, dto.Station, dto.Mandante);
+                errorSalida = "Estación deshabilitada por la matriz de mensajes.";
+                return resultado = Conflict(new { message = errorSalida });
+            }
+
+            if (accion == MatrixAction.Ignorar)
+            {
+                _logger.LogInformation("Consulta de stock de {Producto} ignorada por matriz (mandante {Mandante}, estación {Estacion}).",
+                    dto.ProductNumber, dto.Mandante, dto.Station);
+                return resultado = Ok();
+            }
+
+            string dataPayload;
+            try
+            {
+                dataPayload = MapeadorTelegramaConsultaStock.BuildRequest(dto);
+            }
+            catch (ExcepcionFormatoTelegrama ex)
+            {
+                estadoSalida = AuditEstado.Error;
+                errorSalida = ex.Message;
+                return resultado = UnprocessableEntity(new { message = ex.Message });
+            }
+
+            payloadSalida = TramaHex.Encode(dataPayload);
+
+            string response;
+            MensajeEstadoKiSoft status;
+            try
+            {
+                response = await _orderChannel.SendAsync(dataPayload, cancellationToken);
+                status = MensajeEstadoKiSoft.Parse(response);
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogWarning(ex, "Timeout enviando consulta de stock de {Producto} a KiSoft.", dto.ProductNumber);
+                estadoSalida = AuditEstado.Error;
+                errorSalida = ex.Message;
+                return resultado = StatusCode(StatusCodes.Status504GatewayTimeout, new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Canal KiSoft no disponible enviando consulta de stock de {Producto}.", dto.ProductNumber);
+                estadoSalida = AuditEstado.Error;
+                errorSalida = ex.Message;
+                return resultado = StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex, "Conexión con KiSoft perdida enviando consulta de stock de {Producto}.", dto.ProductNumber);
+                estadoSalida = AuditEstado.Error;
+                errorSalida = ex.Message;
+                return resultado = StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+            }
+            catch (ExcepcionFormatoTelegrama ex)
+            {
+                _logger.LogError(ex, "Respuesta de KiSoft malformada enviando consulta de stock de {Producto}.", dto.ProductNumber);
+                estadoSalida = AuditEstado.Error;
+                errorSalida = ex.Message;
+                return resultado = StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+            }
+
+            if (!status.IsOk)
+            {
+                _logger.LogError("Consulta de stock de {Producto} rechazada por KiSoft: estado={Estado}.", dto.ProductNumber, status.Estado);
+                estadoSalida = AuditEstado.Error;
+                errorSalida = $"KiSoft rechazó la consulta: estado={status.Estado}.";
+                LogRespuestaKiSoft(correlationId, "1XR", http, response, AuditEstado.Error, dto.ObjectId, dto.TeCreatedBy);
+                return resultado = StatusCode(StatusCodes.Status502BadGateway, new { recordId = status.RecordId, estado = status.Estado, ok = status.IsOk });
+            }
+
+            estadoSalida = AuditEstado.Entregado;
+            LogRespuestaKiSoft(correlationId, "1XR", http, response, AuditEstado.Entregado, dto.ObjectId, dto.TeCreatedBy);
+            return resultado = Ok(new { recordId = status.RecordId, estado = status.Estado, ok = status.IsOk });
+        }
+        finally
+        {
+            var httpStatus = (resultado as IStatusCodeActionResult)?.StatusCode;
+            LogSalida(correlationId, "1XR", estadoSalida, payloadSalida, errorSalida, (int)stopwatch.ElapsedMilliseconds, http, httpStatus, dto.ObjectId, dto.TeCreatedBy);
+        }
+    }
+
     private void LogEntrada<T>(Guid correlationId, string tipoTelegrama, T dto, AuditHttpContext http, string? idObjeto, string? creadoPorSap) =>
         _auditWriter.EnqueueEntrada(new AuditRecord(correlationId, tipoTelegrama, "SAP", "Middleware", AuditEstado.Recibido,
             JsonSerializer.Serialize(dto), Usuario: http.Usuario, Ruta: http.Ruta, IpOrigen: http.IpOrigen, IdObjeto: idObjeto, CreadoPorSap: creadoPorSap));
