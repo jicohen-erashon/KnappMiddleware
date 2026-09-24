@@ -30,3 +30,7 @@ JSON-SAP/*
 
 CONTEXT.md
 
+# Migraciones/SQL: repo separado (db/), nunca en el repo de la app (puede llevar credenciales de infra)
+db/
+db/*
+

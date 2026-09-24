@@ -97,16 +97,22 @@ caliente sin reiniciar. Ver `db/migrations/0008_sap_webhook_config.sql` y
 
 ## Base de datos
 
-Las migraciones en `db/migrations/` son archivos SQL numerados, pensados para aplicarse en orden y
-de forma idempotente (usan `IF NOT EXISTS` / `CREATE OR REPLACE` donde aplica) contra una base
-Postgres vacía o ya existente. No hay un runner automático incluido en el repo; se aplican a mano,
-por ejemplo:
+Las migraciones **no viven en este repositorio** — los archivos SQL/de base de datos se versionan
+en un repositorio git separado (política del proyecto: nunca mezclar SQL/credenciales de
+infraestructura con el código de la app). Viven en `../db/migrations/` (hermano de este repo, al
+nivel del workspace), son archivos SQL numerados pensados para aplicarse en orden y de forma
+idempotente (usan `IF NOT EXISTS` / `CREATE OR REPLACE` donde aplica) contra una base Postgres
+vacía o ya existente. No hay un runner automático; se aplican a mano, por ejemplo:
 
 ```bash
-for f in db/migrations/*.sql; do
+for f in ../db/migrations/*.sql; do
   psql "postgresql://usuario:password@localhost:5432/Middleware" -f "$f"
 done
 ```
+
+Algunas migraciones (p. ej. `0009_infra_config.sql`) siembran valores de configuración con un
+placeholder (`CAMBIAR_EN_SERVIDOR`) en vez de la contraseña real — configúrala aparte antes de
+aplicar la migración en un entorno real.
 
 Tablas principales: `matriz` (config de la matriz de mensajes), `usuarios` (login + rol),
 `configuracion` (clave/valor de infraestructura), `buzon_entrada` / `buzon_salida` (auditoría de
