@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/common/block-reason.schema.json",
+  "title": "Motivo de bloqueo",
+  "description": "HISP §3.6.5.2.2 (bloqueo manual) y §4.4.1.4.6 (motivo de corrección de stock). 20 chars como máximo.",
+  "type": "string",
+  "minLength": 1,
+  "maxLength": 20,
+  "pattern": "^[A-Z][A-Z0-9_]*$",
+  "oneOf": [
+    { "const": "DEFAULT",        "description": "Razón por defecto" },
+    { "const": "HOST",           "description": "Impuesto por el Host" },
+    { "const": "EXPIRED",        "description": "Stock con fecha vencida" },
+    { "const": "TIME_TO_EXPIRE", "description": "Stock próximo a expirar" },
+    { "const": "QS_REQUIRED",    "description": "Requiere control de calidad" },
+    { "const": "FOUND",          "description": "Stock encontrado en inventario" },
+    { "const": "LOST",           "description": "Pérdida detectada en inventario" },
+    { "const": "SUBSISTEMA",     "description": "Acción desde un subsistema (OSR)" },
+    { "const": "SISTEMA",        "description": "Acción desde el KiSoft One" },
+    { "const": "OSR_not_empty",  "description": "Slot esperaba estar vacío y no lo estaba" },
+    { "const": "under_pick",     "description": "Slot vacío inesperado" },
+    { "const": "inventory",      "description": "Diferencia debida a inventario" },
+    { "const": "damaged_tray",   "description": "Caja insertable dañada retirada" }
+  ]
+}

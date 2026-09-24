@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/print/filename.schema.json",
+  "title": "Nombre de archivo de impresión SFTP (COHEN → KiSoft, vía middleware)",
+  "description": "HISP §3.7.1.1. Tipos doc: 001=albarán (PDF) · 008=etiqueta dirección (ZPL). El '*.end' (0 bytes) marca el fin de transmisión de TODAS las hojas del pedido; no validar como hoja.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "raw": { "type": "string", "description": "Nombre crudo tal como llega por SFTP." },
+    "isEndMarker": { "type": "boolean", "description": "True si es <pedido>.<hoja>.<tipoDoc>.<info>.end (o similar)." },
+    "ordernumber": { "type": ["string", "null"], "pattern": "^[A-Za-z0-9_-]{1,12}$" },
+    "sheetnumber":  { "type": ["string", "null"], "pattern": "^\\d{4}$" },
+    "documenttype": { "type": ["string", "null"], "enum": ["001","008"], "description": "001=albarán PDF · 008=etiqueta ZPL." },
+    "additionalInfo":{ "type": ["string", "null"], "pattern": "^\\d{3}$" },
+    "printedsheetnumber": { "type": ["string", "null"], "pattern": "^\\d{2}$", "description": "01..99." },
+    "expectedmime": { "type": ["string", "null"], "enum": ["application/pdf", "application/zpl"] },
+    "expectedstation": { "type": ["string", "null"], "enum": ["ABB001","LBA001","ABA001"], "description": "Mapping por defecto (HISP §3.7 → asignar según GS_PD): 001=albarán, 008 LBA001→caja cartón, 008 ABA001→caja plástico." }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json#/$defs/Envelope"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "idrecord": {
+          "const": "16N"
+        },
+        "mandtk": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 35
+        },
+        "departuretime": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3])(:?[0-5][0-9]){2}$"
+        },
+        "availabletime": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3])(:?[0-5][0-9]){2}$"
+        },
+        "ramp": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "DIS001",
+            "DIS002"
+          ]
+        },
+        "rampnumber": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 25
+        },
+        "numberoframps": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 20
+        },
+        "rtcreateddateon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "rtcreatedtimeon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9:\\-]{5,12}$"
+        },
+        "rtcreatedby": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        },
+        "rtmodifieddateon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "rtmodifiedtimeon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9:\\-]{5,12}$"
+        }
+      },
+      "required": [
+        "idrecord",
+        "mandtk",
+        "route"
+      ]
+    }
+  ]
+}

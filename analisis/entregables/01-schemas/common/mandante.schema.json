@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/common/mandante.schema.json",
+  "title": "Mandante",
+  "description": "Identificador del cliente/socio mandante. 16 chars. Lista configurada en HISP §3.2.3.2 / §3.3.3.2.",
+  "type": "string",
+  "minLength": 1,
+  "maxLength": 16,
+  "pattern": "^[A-Za-z0-9_-]+$",
+  "examples": ["DEFAULT", "A1201", "A1301", "A1401", "A3601", "A4101", "A5101", "6111"]
+}

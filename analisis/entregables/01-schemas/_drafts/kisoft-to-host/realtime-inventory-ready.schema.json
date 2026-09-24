@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/kisoft-to-host/realtime-inventory-ready.schema.json",
+  "title": "3RR — Archivo de snapshot listo (KiSoft → Host, 9802)",
+  "description": "HISP §4.3.1. Tras este evento, el Host recoge InventorySnapshot_065.f por SFTP (customer_osr/customer). Acuse 4RR.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["station", "requesttype"],
+  "properties": {
+    "station":     { "type": "string", "const": "065" },
+    "requesttype": { "type": "string", "const": "31" },
+    "snapshotfilename": { "type": "string", "pattern": "^InventorySnapshot_065\\.f$" }
+  }
+}

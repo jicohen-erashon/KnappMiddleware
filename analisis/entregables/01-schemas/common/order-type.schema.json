@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/common/order-type.schema.json",
+  "title": "Tipo de pedido (campo T)",
+  "description": "Valor de 2 dígitos que define la naturaleza del pedido. HISP §3.2.3.3 / §4.1.5.2.",
+  "type": "string",
+  "minLength": 2,
+  "maxLength": 2,
+  "pattern": "^[0-9]{2}$",
+  "oneOf": [
+    { "const": "01", "description": "Pedido de salida de mercancía" },
+    { "const": "02", "description": "Transporte (Open Shuttle)" },
+    { "const": "03", "description": "Almacenaje en sistema (goods-in)" },
+    { "const": "04", "description": "Almacenaje por UC / decanting (bulk goods-in)" },
+    { "const": "05", "description": "Almacenaje abierto (open goods-in)" },
+    { "const": "06", "description": "Adición (goods-add)" },
+    { "const": "07", "description": "Adición por palet (goods-add by pallet)" },
+    { "const": "10", "description": "Entrega de salida" },
+    { "const": "15", "description": "Pedido de transporte interno" },
+    { "const": "24", "description": "Solicitud de UC vacía" },
+    { "const": "35", "description": "Retiro" },
+    { "const": "36", "description": "Full carton a dispatch" }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json#/$defs/Envelope"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "idrecord": {
+          "const": "1UU"
+        },
+        "mandtk": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "geocode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 12
+        },
+        "loadunit": {
+          "type": "string",
+          "maxLength": 8,
+          "pattern": "^[A-Z0-9]+$"
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 99,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "productnumber",
+              "packsize",
+              "stocktype",
+              "quantity"
+            ],
+            "properties": {
+              "productnumber": {
+                "type": "string",
+                "maxLength": 12
+              },
+              "packsize": {
+                "type": "string",
+                "pattern": "^[0-9]{4}$"
+              },
+              "stocktype": {
+                "type": "string",
+                "enum": [
+                  "STANDARD",
+                  "B6",
+                  "QQ",
+                  "2F",
+                  "1E",
+                  "1X",
+                  "1Z"
+                ]
+              },
+              "batchnumber": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 20
+              },
+              "expirationdate": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date"
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9999
+              },
+              "stockquality": {
+                "type": "string",
+                "pattern": "^[12]$"
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "idrecord",
+        "mandtk",
+        "loadunit"
+      ]
+    }
+  ]
+}

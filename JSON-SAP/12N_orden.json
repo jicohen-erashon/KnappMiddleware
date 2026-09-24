@@ -1,0 +1,57 @@
+{
+ "telid":"1000000000",
+ "idrecord":"12N",
+ "idrecordstatus":"22N",
+ "direction":"HK",
+ "objecttype":"ORDER",
+ "objectid":"INB000000001",
+ "tecreateddateon":"2026‑09‑23",
+ "tecreatedtimeon":"10:32:02",
+ "tecreatedby":"ERASHON",
+ "temodifieddateon":"2026‑09‑23",
+ "temodifiedtimeon":"10:32:02",
+ "temodifiedby":"ERASHON",
+ "sentdate":"2026‑09‑23",
+ "senttime":"10:32:02",
+ "status":"001",
+ "warehousenumber":"1200",
+ "mandtk":"A1301",
+ "sheetnumber":"0000",
+ "ordernumber":"INB000000001",
+ "ordertype":"04",
+ "loadtype":"OSR_BIN",
+ "loadunit":"00001234",
+ "businesspartner":"0000100001",
+ "texts":
+ [
+  {
+   "text":"Entrega entrante para decanting y almacenaje en OSR"
+  }
+ ],
+ "priority":"500",
+ "parameters":
+ [
+  {
+   "stateqty":1,
+   "state":"0000"
+  }
+ ],
+ "items":
+ [
+  {
+   "linereference":"000010",
+   "station":"065",
+   "productnumber":"ASP500TAB001",
+   "packsize":"0001",
+   "stocktype":"STANDARD",
+   "batchnumber":"LOT20260901",
+   "expirationdate":"2028‑09‑30",
+   "quantity":120,
+   "stockquality":"1",
+   "unit":"EA",
+   "note":"Decantar en contenedor OSR",
+   "loadtype":"OSR_BIN",
+   "loadunit":"00001234"
+  }
+ ]
+}

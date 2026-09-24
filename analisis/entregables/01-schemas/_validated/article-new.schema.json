@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json#/$defs/Envelope"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "idrecord": {
+          "const": "14N"
+        },
+        "productnumber": {
+          "type": "string",
+          "maxLength": 12,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "mandtk": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "station": {
+          "type": "string",
+          "pattern": "^[0-9]{3}$"
+        },
+        "rackblk": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{1,3}$"
+        },
+        "rackchannel": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{1,3}$"
+        },
+        "racklevel": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{1,3}$"
+        },
+        "packsize": {
+          "type": "string",
+          "pattern": "^[0-9]{4}$"
+        },
+        "eyenumber": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-8][0-9]$"
+        },
+        "sdamaxqty": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "length": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "width": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "umlwh": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "MM",
+            "CM",
+            "M"
+          ]
+        },
+        "netweight": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "grossweigth": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "umweigth": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "KG",
+            "G",
+            "LB",
+            "OZ"
+          ]
+        },
+        "itBarcodes": {
+          "type": "array",
+          "maxItems": 99,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "productnumber"
+            ],
+            "properties": {
+              "productnumber": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "eancode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 20
+              },
+              "unitalt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4
+              }
+            }
+          }
+        },
+        "productdescription": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 40
+        },
+        "geocode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 12
+        },
+        "repmaxqty": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9999
+        },
+        "repminqty": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9999
+        },
+        "itProperties": {
+          "type": "array",
+          "maxItems": 99,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "property"
+            ],
+            "properties": {
+              "property": {
+                "type": "string",
+                "pattern": "^(01|02|03)$"
+              }
+            }
+          }
+        },
+        "repgeocode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 12
+        },
+        "repleftstation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{3}$"
+        },
+        "acreateddateon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "acreatedtimeon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9:\\-]{5,12}$"
+        },
+        "acreatedby": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        },
+        "amodifieddateon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "amodifiedtimeon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9:\\-]{5,12}$"
+        },
+        "amodifiedby": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "idrecord",
+        "productnumber",
+        "mandtk",
+        "station",
+        "packsize"
+      ]
+    }
+  ]
+}

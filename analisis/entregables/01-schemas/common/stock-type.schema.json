@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/common/stock-type.schema.json",
+  "title": "Tipo de stock",
+  "description": "DS §3.2.3.6 / HIS tabla. 8 chars. La lista permitida depende de la estación de destino; ver matriz.",
+  "type": "string",
+  "minLength": 1,
+  "maxLength": 8,
+  "oneOf": [
+    { "const": "STANDARD", "description": "Artículo nuevo (todas las estaciones)" },
+    { "const": "B6",      "description": "No disponible en SAP aún (todas excepto CBS001)" },
+    { "const": "QQ",      "description": "Control de calidad (todas excepto CBS001)" },
+    { "const": "2F",      "description": "Fecha expiración < 6 meses (OSR excepto CBS001)" },
+    { "const": "1E",      "description": "Promoción / regalo (OSR + manuales palet, excepto CBS001)" },
+    { "const": "1X",      "description": "Comodín 1 (todas excepto CBS001)" },
+    { "const": "1Z",      "description": "Comodín 2 (todas excepto CBS001)" }
+  ]
+}

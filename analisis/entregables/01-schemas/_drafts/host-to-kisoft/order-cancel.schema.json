@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knapp.local/schemas/host-to-kisoft/order-cancel.schema.json",
+  "title": "12D — Cancelar pedido (Host → KiSoft, 9801)",
+  "description": "HISP §3.2.2. Hoja solo 0001. Sincronizado con 22D. Si KiSoft responde 33, el pedido ya no se puede borrar.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mandtk", "ordernumber", "sheetnumber"],
+  "properties": {
+    "mandtk":      { "$ref": "https://knapp.local/schemas/common/mandante.schema.json" },
+    "ordernumber": { "type": "string", "minLength": 1, "maxLength": 12, "pattern": "^[A-Za-z0-9_-]+$" },
+    "sheetnumber": { "type": ["string", "null"], "const": "0001" }
+  }
+}
