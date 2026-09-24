@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="./KnappMiddleware.csproj" />
+  <Project Path="../KnappMiddleware.Tests/KnappMiddleware.Tests.csproj" />
+</Solution>

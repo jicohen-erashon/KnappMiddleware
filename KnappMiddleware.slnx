@@ -1,6 +1,0 @@
-<Solution>
-  <Project Path="./KnappMiddleware.Api/KnappMiddleware.Api.csproj" />
-  <Project Path="./KnappMiddleware.Domain/KnappMiddleware.Domain.csproj" />
-  <Project Path="./KnappMiddleware.Infrastructure/KnappMiddleware.Infrastructure.csproj" />
-  <Project Path="./KnappMiddleware.Tests/KnappMiddleware.Tests.csproj" />
-</Solution>

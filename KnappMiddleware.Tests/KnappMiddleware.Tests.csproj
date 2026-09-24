@@ -19,8 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KnappMiddleware.Domain\KnappMiddleware.Domain.csproj" />
-    <ProjectReference Include="..\KnappMiddleware.Infrastructure\KnappMiddleware.Infrastructure.csproj" />
+    <ProjectReference Include="..\KnappMiddleware\KnappMiddleware.csproj" />
   </ItemGroup>
 
 </Project>

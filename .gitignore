@@ -1,15 +1,22 @@
-## .NET
-bin/
-obj/
+# Build artifacts
+[Bb]in/
+[Oo]bj/
 *.user
-
-## Visual Studio / Rider
 .vs/
 .idea/
 
-## Logs
-KnappMiddleware.Api/logs/
+# Logs
+**/logs/
 *.log
 
-## Claude Code local settings
-.claude/settings.local.json
+# Claude Code local config (no versionar ajustes locales del asistente)
+.claude/
+
+# Estado interno de herramientas (índice CodeGraph, continuaciones de sesión), no es código del proyecto
+.codegraph/
+.omo/
+
+# Documentos de referencia binarios grandes (specs/entregables en PDF/Office, no son código fuente)
+*.pdf
+*.docx
+*.odt
