@@ -22,7 +22,11 @@
 *.odt
 
 analisis/
+analisis/*
 herramientas/
+herramientas/*
 JSON-SAP/
+JSON-SAP/*
 
 CONTEXT.md
+
