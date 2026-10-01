@@ -16,7 +16,7 @@ namespace KnappMiddleware.Controllers.Sap;
 
 [ApiController]
 [Route("api/v1/sap/inventory")]
-[Authorize(Policy = AuthorizationPolicies.SapOrSuperUsuario)]
+[Authorize(AuthenticationSchemes = BasicAuthenticationHandler.SchemeName, Policy = AuthorizationPolicies.SapOrSuperUsuario)]
 [Tags("Inventory")]
 public sealed class InventoryController : ControllerBase
 {

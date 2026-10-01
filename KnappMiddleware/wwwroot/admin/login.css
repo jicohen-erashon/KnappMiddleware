@@ -1,0 +1,45 @@
+/* KnappMiddleware · pantalla de login del panel administrativo */
+
+.login-body {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(560px 360px at 50% -8%, var(--accent-soft), transparent 70%),
+    var(--bg);
+}
+
+.login-wrap { width: 100%; padding: 24px; }
+
+.login-card {
+  max-width: 384px; margin: 0 auto;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 34px 32px 30px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+.login-brand {
+  display: flex; align-items: center; gap: 12px;
+  font-weight: 650; font-size: 14.5px; color: var(--fg);
+}
+.login-brand .brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.login-brand small { color: var(--muted); font-weight: 500; font-size: 11.5px; }
+
+.login-card h1 {
+  margin: 4px 0 0; font-size: 21px; font-weight: 650; letter-spacing: -0.01em; color: var(--fg);
+}
+
+.login-card .field { display: flex; flex-direction: column; gap: 5px; }
+.login-card .field label { font-size: 12px; font-weight: 650; color: var(--muted); }
+.login-card .field fluent-text-input { width: 100%; }
+
+.login-error {
+  font-size: 13px; color: var(--err); font-weight: 550;
+  background: var(--err-soft); border-radius: var(--radius);
+  padding: 9px 12px;
+}
+.login-error.hidden { display: none; }
+
+.login-submit { width: 100%; margin-top: 4px; }
+.login-submit:disabled { cursor: wait; }

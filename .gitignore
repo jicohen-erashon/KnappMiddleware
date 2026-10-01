@@ -15,6 +15,7 @@
 # Estado interno de herramientas (índice CodeGraph, continuaciones de sesión), no es código del proyecto
 .codegraph/
 .omo/
+.impeccable/
 
 # Documentos de referencia binarios grandes (specs/entregables en PDF/Office, no son código fuente)
 *.pdf

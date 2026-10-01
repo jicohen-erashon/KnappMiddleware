@@ -12,6 +12,8 @@ public sealed class PostgresConfigRepository : IConfigRepository
 
     private const string UpsertSql = "CALL sp_guardar_configuracion(@Clave, @Valor)";
 
+    private const string DeleteSql = "CALL sp_eliminar_configuracion(@Clave)";
+
     private readonly NpgsqlDataSource _dataSource;
 
     public PostgresConfigRepository(NpgsqlDataSource dataSource)
@@ -33,5 +35,14 @@ public sealed class PostgresConfigRepository : IConfigRepository
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await connection.ExecuteAsync(
             new CommandDefinition(UpsertSql, new { Clave = clave, Valor = valor }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<bool> DeleteValueAsync(string clave, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await connection.ExecuteAsync(
+            new CommandDefinition(DeleteSql, new { Clave = clave }, cancellationToken: cancellationToken));
+        // El SP devuelve void; la capa controller hace GET previo para distinguir 404 vs 204.
+        return true;
     }
 }

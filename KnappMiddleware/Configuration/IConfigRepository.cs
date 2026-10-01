@@ -7,4 +7,10 @@ public interface IConfigRepository
 
     /// <summary>Upsert de un valor. Quien llame debe recargar el <see cref="IConfigGate"/> para que el cambio sea visible.</summary>
     Task SetValueAsync(string clave, string valor, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Elimina una fila por clave. Devuelve true si la fila existía y fue eliminada, false si no
+    /// existía. Requiere el SP <c>sp_eliminar_configuracion(@Clave)</c> en Postgres.
+    /// </summary>
+    Task<bool> DeleteValueAsync(string clave, CancellationToken cancellationToken = default);
 }

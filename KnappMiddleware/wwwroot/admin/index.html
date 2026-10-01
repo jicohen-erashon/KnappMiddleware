@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KnappMiddleware · Panel administrativo</title>
+<link rel="stylesheet" href="vendor/fluent/tokens.css">
+<script type="module" src="vendor/fluent/web-components.min.js"></script>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 17V10l4-5 4 5v7"/>
+        <path d="M12 17v-4l4-5 4 5v4"/>
+      </svg>
+    </span>
+    <span class="brand-text">KnappMiddleware <small>panel administrativo</small></span>
+  </div>
+  <div class="header-right">
+    <fluent-badge id="envBadge" shape="rounded">—</fluent-badge>
+    <fluent-badge id="userChip" shape="rounded" appearance="outline" color="informative">—</fluent-badge>
+    <fluent-button appearance="outline" icon-only id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">⏻</fluent-button>
+    <fluent-button appearance="outline" icon-only id="themeToggle" title="Cambiar tema (t)" aria-label="Cambiar tema">☀</fluent-button>
+  </div>
+</header>
+
+<div class="app-shell">
+<nav class="sidebar" role="tablist" aria-label="Secciones del panel">
+  <button class="tab active" data-tab="cfg" role="tab" aria-selected="true">
+    <span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+    <span class="tab-label">Configuraciones</span>
+    <span class="tab-count" data-count="cfg">—</span>
+  </button>
+  <button class="tab" data-tab="users" role="tab" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+    <span class="tab-label">Usuarios</span>
+    <span class="tab-count" data-count="users">—</span>
+  </button>
+  <button class="tab" data-tab="audit" role="tab" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span>
+    <span class="tab-label">Auditoría</span>
+    <span class="tab-count" data-count="audit">—</span>
+  </button>
+  <button class="tab" data-tab="chan" role="tab" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg></span>
+    <span class="tab-label">Canales KiSoft</span>
+    <span class="tab-count" data-count="chan">—</span>
+  </button>
+  <button class="tab" data-tab="mat" role="tab" aria-selected="false">
+    <span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></span>
+    <span class="tab-label">Matriz</span>
+    <span class="tab-count" data-count="mat">—</span>
+  </button>
+</nav>
+
+<main>
+  <!-- ====================== Configuraciones ====================== -->
+  <section id="tab-cfg" class="active" role="tabpanel">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <fluent-text-input id="cfgSearch" type="search" placeholder="Filtrar por clave, valor o descripción…" autocomplete="off" spellcheck="false"></fluent-text-input>
+        <span class="search-hint" title="Atajo: pulsar / para enfocar">/</span>
+      </div>
+      <select id="cfgGroup" title="Filtrar por prefijo">
+        <option value="">Todos los grupos</option>
+        <option value="audit.">audit.*</option>
+        <option value="kiSoft.">kiSoft.*</option>
+        <option value="sap.">sap.*</option>
+        <option value="sftp.">sftp.*</option>
+        <option value="rabbitmq.">rabbitmq.*</option>
+        <option value="__noGroup">(sin grupo)</option>
+      </select>
+      <fluent-button appearance="outline" size="small" id="btnExpand" title="Expandir/Colapsar grupos">⇕ Grupos</fluent-button>
+      <fluent-button appearance="outline" size="small" id="btnReloadAll">Recargar snapshot</fluent-button>
+      <fluent-button appearance="primary" size="small" id="btnNew" title="Crear nueva configuración (n)">+ Nueva</fluent-button>
+    </div>
+
+    <div id="cfgGroups" class="groups"></div>
+
+    <div class="footer-info">
+      <span id="cfgCount">—</span>
+      <span id="cfgDirtyBadge" class="dirty-badge hidden">0 cambios pendientes</span>
+      <span style="margin-left:auto"><kbd class="kbd">/</kbd> buscar · <kbd class="kbd">n</kbd> nueva · <kbd class="kbd">t</kbd> tema</span>
+    </div>
+  </section>
+
+  <!-- ====================== Usuarios ====================== -->
+  <section id="tab-users" role="tabpanel">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <fluent-text-input id="userSearch" type="search" placeholder="Filtrar por nombre de usuario…" autocomplete="off" spellcheck="false"></fluent-text-input>
+      </div>
+      <fluent-button appearance="outline" size="small" id="btnUserReload">Recargar</fluent-button>
+      <fluent-button appearance="primary" size="small" id="btnUserNew" title="Crear nuevo usuario">+ Nuevo usuario</fluent-button>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr>
+          <th>Usuario</th>
+          <th style="width:140px">Rol</th>
+          <th style="width:110px">Habilitado</th>
+          <th style="width:110px">Creado</th>
+          <th style="width:110px">Actualizado</th>
+          <th style="width:260px">Acciones</th>
+        </tr></thead>
+        <tbody id="userBody"></tbody>
+      </table>
+    </div>
+    <div class="footer-info"><span id="userCount">—</span></div>
+  </section>
+
+  <!-- ====================== Auditoría ====================== -->
+  <section id="tab-audit" role="tabpanel">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <fluent-text-input id="auditSearch" type="search" placeholder="Buscar en idrecord, correlation-id o payload…" autocomplete="off" spellcheck="false"></fluent-text-input>
+      </div>
+      <select id="auditDir" title="Dirección">
+        <option value="Entrada">Entrada</option>
+        <option value="Salida">Salida</option>
+      </select>
+      <fluent-text-input id="auditTake" type="number" min="10" max="500" value="200" title="Cantidad" style="width:90px"></fluent-text-input>
+      <fluent-button appearance="outline" size="small" id="btnAuditReload">Aplicar</fluent-button>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr>
+          <th style="width:110px">Cuándo</th>
+          <th style="width:150px">idrecord</th>
+          <th style="width:220px">correlation-id</th>
+          <th>Payload</th>
+          <th style="width:100px">Estado</th>
+        </tr></thead>
+        <tbody id="auditBody"></tbody>
+      </table>
+    </div>
+    <div class="footer-info">
+      <span id="auditCount">—</span>
+    </div>
+  </section>
+
+  <!-- ====================== Canales ====================== -->
+  <section id="tab-chan" role="tabpanel">
+    <div class="toolbar">
+      <fluent-button appearance="outline" size="small" id="btnChanReload">Refrescar</fluent-button>
+      <fluent-button appearance="primary" size="small" class="danger" id="btnReconnect">Forzar reconexión 9801 + 9802</fluent-button>
+      <span class="meta" id="chanLast"></span>
+    </div>
+    <div id="chanGrid" class="chan-grid"></div>
+  </section>
+
+  <!-- ====================== Matriz ====================== -->
+  <section id="tab-mat" role="tabpanel">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <fluent-text-input id="matSearch" type="search" placeholder="Filtrar por emisor, tipo de telegrama, estación o acción…" autocomplete="off" spellcheck="false"></fluent-text-input>
+      </div>
+      <fluent-button appearance="outline" size="small" id="btnMatReload">Recargar matriz</fluent-button>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr>
+          <th>Emisor</th>
+          <th>Tipo telegrama</th>
+          <th>Estación</th>
+          <th>Acción</th>
+          <th style="width:110px">Modificado</th>
+        </tr></thead>
+        <tbody id="matBody"></tbody>
+      </table>
+    </div>
+    <div class="footer-info"><span id="matCount">—</span></div>
+  </section>
+</main>
+</div>
+
+<!-- ====================== Modal Crear/Editar Usuario ====================== -->
+<fluent-dialog id="userModal" class="modal">
+  <fluent-dialog-body>
+    <span slot="title" id="userModalTitle">Nuevo usuario</span>
+    <fluent-button slot="close" appearance="transparent" icon-only id="userModalClose" aria-label="Cerrar">×</fluent-button>
+    <form id="userForm">
+      <div class="body">
+        <div class="field" id="userNombreField">
+          <label for="userNombre">Nombre de usuario</label>
+          <fluent-text-input id="userNombre" autocomplete="off" spellcheck="false"></fluent-text-input>
+          <small class="hint">Debe iniciar con letra; letras/números/._- (3–64 caracteres).</small>
+          <small class="error" id="userNombreError"></small>
+        </div>
+        <div class="field" id="userPasswordField">
+          <label for="userPassword">Contraseña</label>
+          <fluent-text-input id="userPassword" type="password" autocomplete="new-password"></fluent-text-input>
+          <small class="hint">Mínimo 8 caracteres.</small>
+          <small class="error" id="userPasswordError"></small>
+        </div>
+        <div class="field">
+          <label for="userRol">Rol</label>
+          <select id="userRol">
+            <option value="SuperUsuario">SuperUsuario</option>
+            <option value="Sap">Sap</option>
+          </select>
+        </div>
+        <div class="field" id="userHabilitadoField">
+          <label class="checkbox-label"><fluent-checkbox id="userHabilitado" checked></fluent-checkbox> Habilitado</label>
+        </div>
+        <small class="error" id="userFormError"></small>
+      </div>
+      <div class="footer" slot="action">
+        <span class="spacer"></span>
+        <fluent-button appearance="outline" type="button" id="userCancel">Cancelar</fluent-button>
+        <fluent-button appearance="primary" type="submit" id="userSubmit">Guardar</fluent-button>
+      </div>
+    </form>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- ====================== Modal Restablecer contraseña ====================== -->
+<fluent-dialog id="resetPasswordModal" class="modal">
+  <fluent-dialog-body>
+    <span slot="title">Restablecer contraseña <small id="resetPasswordUser" class="meta"></small></span>
+    <fluent-button slot="close" appearance="transparent" icon-only id="resetPasswordClose" aria-label="Cerrar">×</fluent-button>
+    <form id="resetPasswordForm">
+      <div class="body">
+        <div class="field" id="resetPasswordField">
+          <label for="resetPasswordValue">Contraseña nueva</label>
+          <fluent-text-input id="resetPasswordValue" type="password" autocomplete="new-password"></fluent-text-input>
+          <small class="hint">Mínimo 8 caracteres.</small>
+          <small class="error" id="resetPasswordError"></small>
+        </div>
+      </div>
+      <div class="footer" slot="action">
+        <span class="spacer"></span>
+        <fluent-button appearance="outline" type="button" id="resetPasswordCancel">Cancelar</fluent-button>
+        <fluent-button appearance="primary" type="submit" id="resetPasswordSubmit">Restablecer</fluent-button>
+      </div>
+    </form>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- ====================== Modal Crear/Editar ====================== -->
+<fluent-dialog id="editModal" class="modal">
+  <fluent-dialog-body>
+    <span slot="title" id="editTitle">Editar configuración</span>
+    <fluent-button slot="close" appearance="transparent" icon-only id="editClose" aria-label="Cerrar">×</fluent-button>
+    <form id="editForm">
+      <div class="body">
+        <div class="field" id="editClaveField">
+          <label for="editClave">Clave</label>
+          <fluent-text-input id="editClave" autocomplete="off" spellcheck="false"></fluent-text-input>
+          <small class="hint" id="editClaveHint"></small>
+          <small class="error" id="editClaveError"></small>
+        </div>
+        <div class="field" id="editValorField">
+          <label for="editValor">Valor</label>
+          <textarea id="editValor" rows="3" autocomplete="off" spellcheck="false"></textarea>
+          <small class="hint" id="editValorHint"></small>
+          <small class="error" id="editValorError"></small>
+        </div>
+        <div class="field">
+          <label for="editDescripcion">Descripción (opcional)</label>
+          <fluent-text-input id="editDescripcion" autocomplete="off" spellcheck="false"></fluent-text-input>
+        </div>
+      </div>
+      <div class="footer" slot="action">
+        <span class="spacer"></span>
+        <fluent-button appearance="outline" type="button" id="editCancel">Cancelar</fluent-button>
+        <fluent-button appearance="primary" type="submit" id="editSubmit">Guardar</fluent-button>
+      </div>
+    </form>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- ====================== Modal Confirmar ====================== -->
+<fluent-dialog id="confirmModal" class="modal">
+  <fluent-dialog-body>
+    <span slot="title" id="confirmTitle">Confirmar</span>
+    <fluent-button slot="close" appearance="transparent" icon-only id="confirmClose" aria-label="Cerrar">×</fluent-button>
+    <div class="body" id="confirmBody"></div>
+    <div class="footer" slot="action">
+      <span class="spacer"></span>
+      <fluent-button appearance="outline" id="confirmCancel">Cancelar</fluent-button>
+      <fluent-button appearance="primary" id="confirmOk">Confirmar</fluent-button>
+    </div>
+  </fluent-dialog-body>
+</fluent-dialog>
+
+<!-- ====================== Drawer Historial ====================== -->
+<fluent-drawer id="drawer" type="non-modal" position="end" size="medium" aria-hidden="true">
+  <fluent-drawer-body>
+    <span slot="title">Historial <small id="drawerClave">—</small></span>
+    <fluent-button slot="close" appearance="transparent" icon-only id="drawerClose" aria-label="Cerrar">×</fluent-button>
+    <div class="drawer-body" id="drawerBody"></div>
+  </fluent-drawer-body>
+</fluent-drawer>
+
+<div id="toastHost" class="toast-host"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

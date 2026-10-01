@@ -24,9 +24,9 @@ public sealed class PostgresMatrixRepository : IMatrixRepository
             new CommandDefinition(SelectAllSql, cancellationToken: cancellationToken));
 
         return rows
-            .Select(r => new MatrixEntry(r.Emisor, r.TipoTelegrama, r.Estacion, Enum.Parse<MatrixAction>(r.Accion, ignoreCase: true)))
+            .Select(r => new MatrixEntry(r.Emisor, r.TipoTelegrama, r.Estacion, Enum.Parse<MatrixAction>(r.Accion, ignoreCase: true), r.CreadoEn, r.ActualizadoEn))
             .ToList();
     }
 
-    private sealed record MatrixEntryRow(string Emisor, string TipoTelegrama, string Estacion, string Accion);
+    private sealed record MatrixEntryRow(string Emisor, string TipoTelegrama, string Estacion, string Accion, DateTime CreadoEn, DateTime ActualizadoEn);
 }

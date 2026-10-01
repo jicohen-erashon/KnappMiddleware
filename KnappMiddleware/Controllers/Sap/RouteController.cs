@@ -16,7 +16,7 @@ namespace KnappMiddleware.Controllers.Sap;
 
 [ApiController]
 [Route("api/v1/sap/route")]
-[Authorize(Policy = AuthorizationPolicies.SapOrSuperUsuario)]
+[Authorize(AuthenticationSchemes = BasicAuthenticationHandler.SchemeName, Policy = AuthorizationPolicies.SapOrSuperUsuario)]
 [Tags("Route")]
 public sealed class RouteController : ControllerBase
 {

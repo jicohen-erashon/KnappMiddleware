@@ -16,7 +16,7 @@ namespace KnappMiddleware.Controllers.Sap;
 
 [ApiController]
 [Route("api/v1/sap/businesspartner")]
-[Authorize(Policy = AuthorizationPolicies.SapOrSuperUsuario)]
+[Authorize(AuthenticationSchemes = BasicAuthenticationHandler.SchemeName, Policy = AuthorizationPolicies.SapOrSuperUsuario)]
 [Tags("BusinessPartner")]
 public sealed class BusinessPartnerController : ControllerBase
 {

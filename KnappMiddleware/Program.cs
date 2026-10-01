@@ -5,6 +5,7 @@ using KnappMiddleware.ErrorHandling;
 using KnappMiddleware.Logging;
 using KnappMiddleware.OpenApi;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using NLog;
 using NLog.Web;
@@ -36,11 +37,36 @@ builder.Services.AddKnappRequestResponseLogging(builder.Configuration);
 builder.Services.AddKnappOpenApi();
 builder.Services.AddKnappCore(builder.Configuration);
 
-// HTTP Basic sobre todo el canal SAP-facing (spec sección 10); /health, /scalar, /openapi y / quedan
-// excluidos vía AllowAnonymous (documentación de solo lectura, sin exponer datos).
+// Dos esquemas conviven:
+//  - Cookie (default): panel administrativo (/admin, /api/v1/admin/*, /api/v1/configurations, etc.).
+//    Login explícito vía AdminAuthController; cookie de sesión (IsPersistent = false) que el navegador
+//    descarta al cerrarse — nunca sobrevive un reinicio del navegador.
+//  - Basic (spec sección 10): canal SAP-facing exclusivamente. Los controllers bajo Controllers/Sap y
+//    SftpFileController fijan AuthenticationSchemes = BasicAuthenticationHandler.SchemeName explícito
+//    para no heredar el default Cookie.
+// /health, /scalar, /openapi y / quedan excluidos vía AllowAnonymous (documentación de solo lectura).
 // Por defecto todo endpoint requiere rol SuperUsuario; los endpoints SAP-facing (p. ej. /sftp-file) usan
 // la policy SapOrSuperUsuario para aceptar también el rol Sap.
-builder.Services.AddAuthentication(BasicAuthenticationHandler.SchemeName)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.Cookie.Name = "km_admin_session";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.SlidingExpiration = false;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    })
     .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>(BasicAuthenticationHandler.SchemeName, options => { });
 builder.Services.AddAuthorization(options =>
 {
@@ -70,7 +96,30 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Gate estilo cPanel: sin cookie de sesión válida (rol SuperUsuario), el shell del panel
+// (index.html) ni siquiera se entrega — se redirige a login.html antes de tocar UseStaticFiles.
+// login.html/.css/.js y admin.css quedan públicos (sin datos) para que el login pueda cargar.
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path;
+    if (path.Equals("/admin", StringComparison.OrdinalIgnoreCase)
+        || path.Equals("/admin/index.html", StringComparison.OrdinalIgnoreCase))
+    {
+        var result = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (!result.Succeeded || !result.Principal!.IsInRole(nameof(UserRole.SuperUsuario)))
+        {
+            context.Response.Redirect("/admin/login.html");
+            return;
+        }
+    }
+    await next();
+});
+
+app.UseStaticFiles();
+
 app.UseAuthentication();
+
+app.MapGet("/admin", () => Results.Redirect("/admin/index.html", permanent: false)).AllowAnonymous();
 app.UseAuthorization();
 
 app.MapControllers();

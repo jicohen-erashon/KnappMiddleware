@@ -15,7 +15,7 @@ namespace KnappMiddleware.Controllers.Knapp.Channels.Sftp;
 /// </summary>
 [ApiController]
 [Route("api/v1/sftp-file")]
-[Authorize(Policy = AuthorizationPolicies.SapOrSuperUsuario)]
+[Authorize(AuthenticationSchemes = BasicAuthenticationHandler.SchemeName, Policy = AuthorizationPolicies.SapOrSuperUsuario)]
 [Tags("Sftp")]
 public sealed class SftpFileController : ControllerBase
 {

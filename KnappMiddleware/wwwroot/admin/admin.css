@@ -1,0 +1,477 @@
+/* KnappMiddleware · Admin panel
+ * Tema por CSS variables; light por defecto, dark con [data-theme="dark"] en <html>.
+ * Los componentes reales <fluent-*> (vendor/fluent/web-components.min.js) leen sus propios
+ * tokens --colorXxx / --shadowN / --borderRadiusXxx directamente de vendor/fluent/tokens.css
+ * (cargado antes que esta hoja) — no hace falta tocarlos aquí.
+ * Lo que queda abajo son alias semánticos para el resto del layout (sidebar, tablas, tarjetas,
+ * grupos…) que SÍ seguimos pintando a mano porque la librería no trae un componente para eso;
+ * se definen como var(--colorXxx, <hex de respaldo>) para que, si tokens.css no cargara por
+ * algún motivo, el panel no se quede sin estilos.
+ */
+
+:root {
+  --bg: var(--colorNeutralBackground2, #fafafa);
+  --panel: var(--colorNeutralBackground1, #ffffff);
+  --panel-soft: var(--colorNeutralBackground3, #f5f5f5);
+  --panel-sunken: var(--colorNeutralBackground4, #f0f0f0);
+  --line: var(--colorNeutralStroke2, #e0e0e0);
+  --line-strong: var(--colorNeutralStroke1, #d1d1d1);
+  --fg: var(--colorNeutralForeground1, #242424);
+  --muted: var(--colorNeutralForeground3, #616161);
+  --muted-soft: var(--colorNeutralForegroundDisabled, #bdbdbd);
+  --accent: var(--colorBrandForeground1, #0f6cbd);
+  --accent-hover: var(--colorBrandBackgroundHover, #115ea3);
+  --accent-active: var(--colorBrandBackgroundPressed, #0c3b5e);
+  --accent-fg: var(--colorNeutralForegroundOnBrand, #ffffff);
+  --accent-soft: var(--colorBrandBackground2, #ebf3fc);
+  --focus-ring: var(--colorStrokeFocus2, #0f6cbd);
+  --ok: var(--colorStatusSuccessForeground1, #0e700e);
+  --ok-soft: var(--colorStatusSuccessBackground1, #e6f4e6);
+  --warn: var(--colorStatusWarningForeground1, #855400);
+  --warn-soft: var(--colorStatusWarningBackground1, #fff4ce);
+  --err: var(--colorStatusDangerForeground1, #bc2f32);
+  --err-soft: var(--colorStatusDangerBackground1, #fdedf0);
+  --row-dirty: #fff8e6;
+  --row-dirty-line: #e8a317;
+  --row-new: #eafaf1;
+  --shadow-sm: var(--shadow2, 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14));
+  --shadow: var(--shadow8, 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14));
+  --shadow-lg: var(--shadow16, 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14));
+  --radius-sm: var(--borderRadiusMedium, 4px);
+  --radius: var(--borderRadiusLarge, 6px);
+  --radius-lg: var(--borderRadiusXLarge, 8px);
+  --font: var(--fontFamilyBase, "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif);
+  --mono: ui-monospace, "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  /* alturas usadas por los offsets "sticky" del header/sidebar/toolbar; se redefinen
+     en los breakpoints donde el header o el sidebar cambian de alto real, para que
+     nada quede calculado contra un valor de escritorio obsoleto y se traslape. */
+  --header-h: 55px;
+  --nav-h: 0px;
+}
+
+[data-theme="dark"] {
+  --row-dirty: #2c2408;
+  --row-dirty-line: #d99a1c;
+  --row-new: #0f2b1c;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: 14px/1.5 var(--font);
+  background: var(--bg); color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent); color: var(--accent-fg); }
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+input, textarea, select, button { font-family: inherit; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 8px; border: 3px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-soft); }
+
+/* ---- brand mark ---- */
+.brand-mark {
+  width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto;
+  background: var(--accent); color: var(--accent-fg);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.brand-mark svg { width: 17px; height: 17px; }
+
+/* ---- header ---- */
+header.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: nowrap; gap: 16px; min-width: 0;
+  padding: 11px 24px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 50;
+  height: var(--header-h); box-sizing: border-box;
+}
+header.app-header .brand {
+  display: flex; align-items: center; gap: 12px;
+  font-weight: 650; font-size: 15px; letter-spacing: -0.01em;
+  min-width: 0;
+}
+header.app-header .brand-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+header.app-header .brand small { color: var(--muted); font-weight: 500; font-size: 12px; }
+.header-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+#envBadge { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.header-right fluent-button[icon-only] { font-size: 15px; }
+
+/* ---- app shell (sidebar + content) ---- */
+.app-shell {
+  display: flex; align-items: flex-start;
+  max-width: 1600px; margin: 0 auto;
+}
+
+/* ---- sidebar (WinUI 3 NavigationView) ---- */
+.sidebar {
+  display: flex; flex-direction: column; gap: 2px;
+  flex: 0 0 240px;
+  padding: 12px 8px;
+  background: var(--bg);
+  border-right: none;
+  position: sticky; top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto;
+}
+.sidebar .tab {
+  position: relative;
+  background: none; border: none; color: var(--muted);
+  width: 100%; height: 40px; padding: 0 12px 0 18px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; font-size: 13px; font-weight: 550;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: color 120ms, background-color 120ms;
+}
+.sidebar .tab::before {
+  content: "";
+  position: absolute; left: 0; top: 50%;
+  width: 3px; height: 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  transform: translateY(-50%) scaleY(0);
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar .tab:hover { color: var(--fg); background: var(--panel-soft); }
+.sidebar .tab.active { color: var(--fg); background: var(--panel-sunken); font-weight: 650; }
+.sidebar .tab.active::before { transform: translateY(-50%) scaleY(1); }
+.tab-icon { width: 17px; height: 17px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; opacity: 0.7; color: var(--muted); }
+.tab-icon svg { width: 100%; height: 100%; }
+.sidebar .tab:hover .tab-icon, .sidebar .tab.active .tab-icon { opacity: 1; color: var(--accent); }
+.tab-label { flex: 1; }
+.tab-count {
+  display: inline-flex; min-width: 22px; padding: 2px 8px;
+  background: var(--panel-sunken); color: var(--muted);
+  border-radius: 999px; font-size: 12px; font-weight: 650;
+  justify-content: center; font-variant-numeric: tabular-nums;
+}
+.sidebar .tab.active .tab-count { background: var(--panel); color: var(--fg); }
+.sidebar .tab.dirty .tab-count { background: var(--warn-soft); color: var(--warn); }
+
+/* ---- main ---- */
+main { flex: 1; min-width: 0; padding: 24px 26px 40px; }
+/* combinador de hijo directo: los "grupos" de Configuraciones también son <section class="group">
+   anidados dentro de #cfgGroups — un selector "section" genérico los ocultaría a ellos también. */
+main > section { display: none; }
+main > section.active { display: block; }
+
+/* ---- toolbar (sticky) ---- */
+.toolbar {
+  display: flex; gap: 10px; align-items: center;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
+  position: sticky; top: calc(var(--header-h) + var(--nav-h) + 24px); z-index: 30;
+  box-shadow: var(--shadow-sm);
+}
+.toolbar .search-wrap { position: relative; flex: 1 1 280px; }
+.toolbar .search-wrap fluent-text-input { width: 100%; }
+.toolbar fluent-text-input[type="number"] { width: 90px; }
+.toolbar .search-hint {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  background: var(--panel); padding: 1px 6px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line); pointer-events: none;
+}
+
+/* Botón "peligroso": el appearance="primary" de fluent-button no tiene una variante roja
+   propia (Fluent no define un ButtonAppearance "danger"), así que sobreescribimos los
+   custom properties de marca que ya usa por dentro — el token de estado real, no un hex
+   inventado — sólo en el alcance de este botón. */
+fluent-button.danger {
+  --colorBrandBackground: var(--colorStatusDangerBackground3, #c50f1f);
+  --colorBrandBackgroundHover: var(--colorStatusDangerBackground3Hover, #b10e1c);
+  --colorBrandBackgroundPressed: var(--colorStatusDangerBackground3Pressed, #960b18);
+}
+
+/* fluent-dropdown (@fluentui/web-components 3.1.3) no aplica la selección declarativa y
+   selectOption()/.value quedan rotos en runtime (Iterable yielded undefined en
+   ListFormat.format) — es un defecto reproducible de la librería, así que estos 3 selectores
+   del toolbar se quedan en <select> nativo, estilizado con los mismos tokens. */
+.toolbar select {
+  padding: 9px 30px 9px 12px; background: var(--panel-soft); color: var(--fg);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: inset 0 -1px 0 0 var(--line-strong);
+  font-size: 13px; cursor: pointer;
+  transition: background-color 120ms, box-shadow 120ms;
+}
+.toolbar select:focus { outline: none; background: var(--panel); box-shadow: inset 0 -2px 0 0 var(--accent); }
+.modal .field select {
+  padding: 9px 11px; background: var(--panel-soft); color: var(--fg);
+  border: 1px solid var(--line); border-radius: var(--radius-sm); font-family: var(--mono); font-size: 13px;
+  box-shadow: inset 0 -1px 0 0 var(--line-strong);
+}
+.modal .field select:focus { outline: none; background: var(--panel); box-shadow: inset 0 -2px 0 0 var(--accent); }
+
+/* ---- groups (collapsible) ---- */
+.groups { display: flex; flex-direction: column; gap: 14px; }
+.group {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+.group-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer; user-select: none;
+  background: var(--panel-soft);
+  transition: background-color 120ms;
+}
+.group-header:hover { background: var(--panel-sunken); }
+.group-caret {
+  display: inline-block; width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid var(--muted);
+  transition: transform 150ms ease;
+}
+.group.collapsed .group-caret { transform: rotate(-90deg); }
+.group.collapsed .group-body { display: none; }
+.group-title { font-weight: 650; font-size: 13px; font-family: var(--mono); }
+.group-count {
+  font-size: 12px; padding: 2px 8px; background: var(--accent-soft); color: var(--accent);
+  border-radius: 999px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.group-dirty-badge {
+  margin-left: auto; font-size: 12px; font-weight: 650;
+  padding: 3px 9px; background: var(--warn-soft); color: var(--warn);
+  border-radius: 999px; display: none;
+}
+.group.has-dirty .group-dirty-badge { display: inline-block; }
+.group-body { display: flex; flex-direction: column; }
+
+/* ---- row ---- */
+.row {
+  display: grid;
+  grid-template-columns: 260px 1fr 170px 108px auto;
+  gap: 14px; align-items: center;
+  padding: 11px 16px;
+  border-top: 1px solid var(--line);
+  transition: background-color 120ms;
+}
+.row:hover { background: var(--panel-soft); }
+.row.dirty { background: var(--row-dirty); }
+.row.new { background: var(--row-new); }
+.row .clave { font-family: var(--mono); font-size: 12px; color: var(--accent); word-break: break-all; font-weight: 600; }
+.row .valor-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.row fluent-text-input.valor {
+  font-family: var(--mono); font-size: 12.5px;
+  width: 100%; padding: 7px 10px;
+  background: var(--panel-soft); color: var(--fg);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: inset 0 -1px 0 0 var(--line-strong);
+  transition: border-color 120ms, background-color 120ms, box-shadow 120ms;
+}
+.row fluent-text-input.valor:focus-within { background: var(--panel); box-shadow: inset 0 -2px 0 0 var(--accent); }
+.row fluent-text-input.valor.dirty { border-color: var(--row-dirty-line); background: var(--panel); box-shadow: inset 0 -1px 0 0 var(--row-dirty-line); }
+.row .descripcion { font-size: 12px; color: var(--muted); }
+.row .meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row .meta .ts { border-bottom: 1px dotted var(--line-strong); cursor: help; }
+.row .actions { display: flex; gap: 4px; justify-content: flex-end; align-items: center; }
+.row .actions fluent-button[data-act="save"] { display: none; }
+.row .actions fluent-button[data-act="save"]:not(:disabled) { display: inline-flex; }
+
+/* ---- footer info ---- */
+.footer-info {
+  margin-top: 16px; display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: var(--muted);
+}
+.dirty-badge {
+  background: var(--warn-soft); color: var(--warn);
+  padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 650;
+}
+
+/* ---- empty state ---- */
+.empty {
+  background: var(--panel); border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: 52px 24px;
+  text-align: center; color: var(--muted);
+}
+.empty h3 { margin: 0 0 8px; font-size: 15px; color: var(--fg); font-weight: 650; }
+.empty p { margin: 0 0 18px; font-size: 13px; }
+
+/* ---- skeleton ---- */
+.skeleton {
+  background: linear-gradient(90deg, var(--panel-soft) 0%, var(--line) 50%, var(--panel-soft) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: var(--radius-sm);
+  height: 18px;
+}
+.skeleton-row { display: grid; grid-template-columns: 260px 1fr 170px 108px auto; gap: 14px; padding: 19px 16px; border-top: 1px solid var(--line); }
+.skeleton-row > * { height: 22px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ---- channel cards ---- */
+.chan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 16px; }
+.chan-card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); padding: 18px 20px;
+}
+.chan-card h3 {
+  margin: 0 0 12px; font-size: 13.5px; font-weight: 650;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.chan-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; }
+.chan-stat:last-of-type { border-bottom: none; }
+.chan-stat .k { color: var(--muted); }
+.chan-stat .v { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ---- tables (audit, matrix, users) ---- */
+/* min-width evita que las columnas se compriman hasta ilegibles; el ancho real de scroll
+   lo resuelve .table-wrap, no la tabla — así el desborde nunca empuja al sidebar/main. */
+.table-wrap { width: 100%; overflow-x: auto; border-radius: var(--radius-lg); }
+table.data { width: 100%; min-width: 720px; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+table.data th, table.data td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); font-size: 13px; vertical-align: top; }
+table.data th { background: var(--panel-soft); color: var(--muted); font-weight: 600; font-size: 12px; }
+table.data tr:last-child td { border-bottom: none; }
+table.data tbody tr { transition: background-color 120ms; }
+table.data tbody tr:hover { background: var(--panel-soft); }
+table.data td code { font-family: var(--mono); font-size: 12px; }
+table.data td .meta { color: var(--muted); font-size: 12px; }
+table.data td.actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+table.data td .ts { font-variant-numeric: tabular-nums; border-bottom: 1px dotted var(--line-strong); cursor: help; white-space: nowrap; }
+table.data td pre.payload {
+  margin: 0; white-space: pre-wrap; word-break: break-word;
+  font-size: 12px; font-family: var(--mono);
+  background: var(--panel-sunken); padding: 8px 10px; border-radius: var(--radius-sm);
+  max-height: 120px; overflow-y: auto;
+}
+
+/* ---- toast (stack) ---- */
+.toast-host {
+  position: fixed; bottom: 22px; right: 22px; left: 22px;
+  display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px;
+  z-index: 200; pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  max-width: 480px; width: 100%;
+  background: var(--panel); color: var(--fg);
+  border-radius: var(--radius); padding: 12px 16px;
+  box-shadow: var(--shadow-lg);
+  animation: slideInRight 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.toast .dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; background: var(--accent); }
+.toast.ok .dot { background: var(--ok); }
+.toast.warn .dot { background: var(--warn); }
+.toast.err .dot { background: var(--err); }
+.toast .body { flex: 1; }
+.toast .title { font-weight: 650; margin-bottom: 2px; }
+.toast .desc { font-size: 12px; color: var(--muted); }
+.toast .close { flex: 0 0 auto; }
+.toast .actions { display: flex; gap: 6px; margin-top: 8px; }
+@keyframes slideInRight { from { transform: translateX(16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ---- modal (create/edit) ----
+   <fluent-dialog>/<fluent-dialog-body> ya traen su propio contenedor, header (slots
+   title/close) y overlay — aquí sólo queda el layout del contenido que nosotros
+   distribuimos en sus slots (form/body/footer). */
+.modal { max-width: 520px; width: 92%; }
+.modal .body { display: flex; flex-direction: column; gap: 15px; }
+.modal .field { display: flex; flex-direction: column; gap: 5px; }
+.modal .field label { font-size: 12px; font-weight: 650; color: var(--muted); }
+.modal .field fluent-text-input { width: 100%; font-family: var(--mono); }
+/* <fluent-text-area> no está registrado en esta versión de la librería (ver vendor/fluent/NOTICE.md);
+   "Valor" se quedó en <textarea> nativo. */
+.modal .field textarea {
+  width: 100%; padding: 9px 11px; background: var(--panel-soft); color: var(--fg);
+  border: 1px solid var(--line); border-radius: var(--radius-sm); font-family: var(--mono); font-size: 13px;
+  box-shadow: inset 0 -1px 0 0 var(--line-strong);
+  min-height: 60px; resize: vertical;
+  transition: border-color 120ms, background-color 120ms, box-shadow 120ms;
+}
+.modal .field textarea:focus { outline: none; background: var(--panel); box-shadow: inset 0 -2px 0 0 var(--accent); }
+/* <fluent-checkbox> no trae slot para texto de etiqueta (sólo checked/indeterminate-indicator);
+   el label va afuera, como con un <input type="checkbox"> nativo. */
+.checkbox-label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+.modal .field .hint { font-size: 12px; color: var(--muted); }
+.modal .field .error { font-size: 12px; color: var(--err); font-weight: 650; display: none; }
+.modal .field.error fluent-text-input, .modal .field.error textarea { border-color: var(--err); }
+.modal .field.error .error { display: block; }
+.modal .footer { display: flex; justify-content: flex-end; gap: 8px; }
+.modal .footer .spacer { flex: 1; }
+
+/* ---- drawer (history side panel) ----
+   <fluent-drawer>/<fluent-drawer-body> traen su propio contenedor, animación de
+   entrada, overlay y header (slots title/close); acá sólo el contenido que nosotros
+   metemos en el slot por defecto. */
+.drawer-body { padding: 4px 2px; overflow-y: auto; }
+
+[slot="title"] small { color: var(--muted); font-family: var(--mono); font-size: 12px; margin-left: 8px; font-weight: 500; }
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+.timeline-item {
+  background: var(--panel-soft); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 13px 14px;
+}
+.timeline-item .ti-head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; gap: 8px; }
+.timeline-item .ti-meta { color: var(--muted); }
+.timeline-item .ti-action { font-weight: 650; }
+.timeline-item pre {
+  margin: 0; font-family: var(--mono); font-size: 12px;
+  white-space: pre-wrap; word-break: break-word;
+  background: var(--panel-sunken); padding: 8px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+.diff-line { display: grid; grid-template-columns: 16px 1fr; gap: 6px; font-family: var(--mono); font-size: 12px; }
+.diff-line.add { color: var(--ok); }
+.diff-line.del { color: var(--err); text-decoration: line-through; opacity: 0.8; }
+.diff-line.eq { color: var(--muted); }
+
+/* ---- shortcuts hint ---- */
+.kbd {
+  display: inline-block; font-family: var(--mono); font-size: 12px;
+  padding: 1px 5px; border-radius: var(--radius-sm);
+  background: var(--panel-soft); border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* ---- responsive ---- */
+/* 1100px y no 900px: el sidebar fijo (226px) le resta ese espacio al área de contenido, así que el
+   punto de quiebre real para el ancho disponible de .row queda más arriba que antes del sidebar. */
+@media (max-width: 1100px) {
+  /* el sidebar deja de ser una columna lateral y pasa a ser una franja horizontal
+     apilada entre el header y el contenido; ambos quedan "sticky" a la vez, así que
+     el toolbar necesita sumar la altura de esa franja (--nav-h) a su propio offset
+     o quedaría tapado debajo de ella al hacer scroll. */
+  :root { --nav-h: 64px; }
+  .row { grid-template-columns: 1fr; gap: 6px; }
+  .row .actions { justify-content: flex-start; }
+  .row .actions fluent-button[data-act="save"]:not(:disabled) { display: inline-flex; }
+  .toolbar { flex-wrap: wrap; }
+  .app-shell { flex-direction: column; }
+  .sidebar {
+    flex-direction: row; flex: 0 0 auto; width: 100%; height: var(--nav-h);
+    position: sticky; top: var(--header-h);
+    overflow-x: auto; overflow-y: hidden;
+    background: var(--panel); border-bottom: 1px solid var(--line);
+    z-index: 40;
+  }
+  .sidebar .tab { padding: 0 14px; white-space: nowrap; flex: 0 0 auto; }
+  .sidebar .tab::before {
+    left: 50%; top: auto; bottom: 0;
+    width: 16px; height: 3px;
+    transform: translateX(-50%) scaleX(0);
+  }
+  .sidebar .tab.active::before { transform: translateX(-50%) scaleX(1); }
+}
+
+/* header muy angosto: recorta lo no esencial (usuario, subtítulo) para que la marca
+   y los badges de riesgo (PROD/DEV) nunca fuercen una segunda línea — un header que
+   crece de alto rompe los offsets "sticky" de arriba, que asumen una sola altura. */
+@media (max-width: 560px) {
+  header.app-header { padding: 10px 14px; gap: 10px; }
+  header.app-header .brand small { display: none; }
+  .header-right { gap: 6px; }
+  .user-chip { display: none; }
+}
