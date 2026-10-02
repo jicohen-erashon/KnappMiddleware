@@ -35,3 +35,7 @@ CONTEXT.md
 db/
 db/*
 
+# Backups/dumps SQL para transporte entre ambientes (contiene hashes de contrasena reales)
+transporte/
+transporte/*
+
