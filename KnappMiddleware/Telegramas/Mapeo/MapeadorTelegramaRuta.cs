@@ -10,11 +10,12 @@ public static class MapeadorTelegramaRuta
 
     public static string BuildNew(SolicitudRutaDto dto)
     {
-        // HIS pág. 35 (§3.1.3.2.1) declara este campo con ancho fijo 8 (cita literal del PDF, no una
-        // suposición). SAP consistentemente envía 10 caracteres (p. ej. "RUTA000001") — mismatch real
+        // HIS pág. 35 (§3.1.3.2.1) declara este campo con ancho fijo 8 (cita literal del PDF, sin
+        // cambios entre V2 y V3 — se sigue siempre la versión más reciente del HIS, no la muestra real
+        // de SAP). SAP consistentemente envía 10 caracteres (p. ej. "RUTA000001") — mismatch real
         // escalado a KNAPP (ver JSON-SAP/PENDIENTE-1XR.md). Mientras se confirma, se mantiene fiel al
-        // spec: un valor de más de 8 caracteres se rechaza en SolicitudRutaDto (StringLength(8)) antes
-        // de llegar acá, en vez de truncarse silenciosamente.
+        // spec: un valor de más de 8 caracteres se rechaza con 400 en SolicitudRutaDto
+        // (StringLength(8), fallo de ModelState) antes de llegar acá, en vez de truncarse silenciosamente.
         var writer = new EscritorTelegrama();
         writer.Raw("16N");
         writer.LengthPrefix(2, 16);

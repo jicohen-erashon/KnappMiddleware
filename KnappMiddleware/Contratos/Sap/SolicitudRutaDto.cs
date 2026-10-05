@@ -60,10 +60,12 @@ public sealed class SolicitudRutaDto : ISobreTelegramaSap
     // ===== Campos del registro 16N (HIS §3.1.3.2.1) =====
 
     /// <summary>HIS pág. 35: "Longitud de número de ruta teórica" = 08 (ancho fijo, confirmado
-    /// literal en el PDF, no es una suposición). SAP consistentemente envía 10 caracteres (p. ej.
+    /// literal en el PDF y sin cambios entre V2 y V3 — la versión más reciente del HIS es siempre la
+    /// fuente de verdad, no la muestra real de SAP). SAP consistentemente envía 10 caracteres (p. ej.
     /// "RUTA000001") — mismatch real, escalado a KNAPP en JSON-SAP/PENDIENTE-1XR.md. Mientras se
-    /// confirma, el ancho de la trama se mantiene fiel al spec (8): un valor de 10 caracteres se
-    /// rechaza con 422 en vez de truncarse silenciosamente.</summary>
+    /// confirma, el ancho se mantiene fiel al spec (8): este `[StringLength(8)]` rechaza un valor de
+    /// 10 caracteres con 400 (fallo de ModelState de [ApiController], antes de llegar al mapper) en
+    /// vez de truncarse silenciosamente.</summary>
     [JsonPropertyName("route")]
     [StringLength(8)]
     public required string RouteNumber { get; init; }
