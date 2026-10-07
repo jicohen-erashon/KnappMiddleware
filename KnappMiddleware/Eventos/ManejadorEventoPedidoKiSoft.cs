@@ -3,27 +3,25 @@ using KnappMiddleware.Matrix;
 using KnappMiddleware.Sap;
 using KnappMiddleware.Tcp;
 using KnappMiddleware.Telegramas.Mapeo;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace KnappMiddleware.Eventos;
 
 /// <summary>
-/// Se suscribe a <see cref="ICanalEventoKiSoft.TelegramReceived"/> y traduce los eventos de pedido
-/// (32R) que KiSoft empuja al Host: decodifica → acusa SIEMPRE en ≤10s (HIS §2.6, pase lo que pase
-/// aguas abajo) → gate de matriz → si procede, POST fire-and-forget a SAP. Sin buffer de entrega: si
-/// SAP está caído el evento se pierde (riesgo aceptado, ver CONTEXT.md).
+/// Traduce los eventos de pedido (32R) que KiSoft empuja al Host: decodifica → acusa SIEMPRE en ≤10s
+/// (HIS §2.6, pase lo que pase aguas abajo) → gate de matriz → si procede, POST fire-and-forget a SAP.
+/// Sin buffer de entrega: si SAP está caído el evento se pierde (riesgo aceptado, ver CONTEXT.md).
 /// </summary>
-public sealed class DespachadorEventoPedidoKiSoft : IHostedService
+public sealed class ManejadorEventoPedidoKiSoft : IManejadorEventoKiSoft
 {
     private readonly ICanalEventoKiSoft _eventChannel;
     private readonly ClsMatrixGate _matrixGate;
     private readonly IClienteWebhookSap _webhookClient;
-    private readonly ILogger<DespachadorEventoPedidoKiSoft> _logger;
+    private readonly ILogger<ManejadorEventoPedidoKiSoft> _logger;
 
-    public DespachadorEventoPedidoKiSoft(
+    public ManejadorEventoPedidoKiSoft(
         ICanalEventoKiSoft eventChannel, ClsMatrixGate matrixGate, IClienteWebhookSap webhookClient,
-        ILogger<DespachadorEventoPedidoKiSoft> logger)
+        ILogger<ManejadorEventoPedidoKiSoft> logger)
     {
         _eventChannel = eventChannel;
         _matrixGate = matrixGate;
@@ -31,26 +29,10 @@ public sealed class DespachadorEventoPedidoKiSoft : IHostedService
         _logger = logger;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _eventChannel.TelegramReceived += HandleAsync;
-        return Task.CompletedTask;
-    }
+    public bool PuedeManejar(string data) => MapeadorTelegramaEventoPedido.IsOrderEvent(data);
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task ManejarAsync(string data, CancellationToken cancellationToken)
     {
-        _eventChannel.TelegramReceived -= HandleAsync;
-        return Task.CompletedTask;
-    }
-
-    private async Task HandleAsync(string data, CancellationToken cancellationToken)
-    {
-        if (!MapeadorTelegramaEventoPedido.IsOrderEvent(data))
-        {
-            await AcknowledgeUnknownAsync(data, cancellationToken);
-            return;
-        }
-
         EventoPedidoDto? orderEvent = null;
         try
         {
@@ -101,14 +83,5 @@ public sealed class DespachadorEventoPedidoKiSoft : IHostedService
             _logger.LogError(ex, "Error inesperado despachando a SAP el evento de pedido {Pedido}/{Hoja}.",
                 orderEvent.OrderNumber, orderEvent.SheetNumber);
         }
-    }
-
-    /// <summary>HIS §2.5: identificador de registro no válido → "2" + 2º/3er dígito del recibido + estado "91".</summary>
-    private async Task AcknowledgeUnknownAsync(string data, CancellationToken cancellationToken)
-    {
-        var recordId = data.Length >= 3 ? data[..3] : "000";
-        var ack = recordId.Length == 3 ? $"2{recordId[1..3]}91" : "00091";
-        _logger.LogWarning("Evento KiSoft con identificador de registro no soportado: '{RecordId}'.", recordId);
-        await _eventChannel.AcknowledgeAsync(ack, cancellationToken);
     }
 }

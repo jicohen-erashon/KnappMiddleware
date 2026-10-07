@@ -10,4 +10,18 @@ namespace KnappMiddleware.Sap;
 public interface IClienteWebhookSap
 {
     Task NotifyOrderEventAsync(EventoPedidoDto orderEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyInventoryEventAsync(EventoInventarioDto inventoryEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyInventoryFileReadyAsync(EventoArchivoInventarioDto fileReadyEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyStockArticleEventAsync(EventoStockArticuloDto stockEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyStockAdjustmentEventAsync(EventoAjusteStockDto adjustmentEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyLoadUnitEmptyEventAsync(EventoUnidadCargaVaciaDto emptyEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyLoadUnitStockChangeEventAsync(EventoCambioStockUnidadCargaDto changeEvent, CancellationToken cancellationToken = default);
+
+    Task NotifyArticleStockChangeEventAsync(EventoCambioPropiedadesStockDto changeEvent, CancellationToken cancellationToken = default);
 }

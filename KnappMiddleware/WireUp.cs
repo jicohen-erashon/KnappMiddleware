@@ -84,7 +84,15 @@ public static class WireUp
         services.AddHostedService<ConfigGateStartupService>();
         services.AddHostedService<MatrixGateStartupService>();
         services.AddHostedService<UserGateStartupService>();
-        services.AddHostedService<DespachadorEventoPedidoKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoPedidoKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoInventarioKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoArchivoInventarioKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoStockArticuloKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoAjusteStockKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoUnidadCargaVaciaKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoCambioStockUnidadCargaKiSoft>();
+        services.AddSingleton<IManejadorEventoKiSoft, ManejadorEventoCambioPropiedadesStockKiSoft>();
+        services.AddHostedService<DespachadorEventoKiSoft>();
         services.AddHostedService<ServicioCanalesKiSoft>();
         services.AddHostedService<AuditWriterBackgroundService>();
 
