@@ -248,24 +248,31 @@ conectado"), que es el comportamiento esperado.
 
 ## Docker (entorno standalone)
 
-`Cohen-KnappMiddleware/` trae un `docker-compose.yml` 100% autocontenido: levanta su propio
-Postgres y su propio RabbitMQ (no depende de ningún contenedor o red externos ya existentes).
+`Cohen-KnappMiddleware/` (en la raíz del repo, junto a `KnappMiddleware/` y `db/` — no dentro del
+código del proyecto) trae un `docker-compose.yml` 100% autocontenido: levanta su propio Postgres y
+su propio RabbitMQ (no depende de ningún contenedor o red externos ya existentes).
 
 ```bash
-cd Cohen-KnappMiddleware
+cd ../Cohen-KnappMiddleware   # desde KnappMiddleware/; o "cd Cohen-KnappMiddleware" desde la raíz del repo
 cp .env.example .env   # completar POSTGRES_PASSWORD / RABBITMQ_PASSWORD como mínimo
 docker compose up -d --build
 ```
+
+El primer `up` (o cualquiera posterior) corre, en orden: `postgres` (vacío) → `migrate` (aplica
+entero el repo separado de migraciones, idempotente, vía `MIGRATIONS_PATH`) → `admin-seed`
+(opcional) → `middleware`. `migrate` se re-ejecuta en cada `up` a propósito — así un redeploy sobre
+un volumen que ya tiene datos también recoge migraciones nuevas, algo que
+`docker-entrypoint-initdb.d` nunca resuelve (Postgres solo lo corre una vez, al crear el volumen).
 
 Variables relevantes de `.env` (ver `.env.example` para la lista completa):
 
 | Variable | Para qué sirve |
 |---|---|
 | `POSTGRES_PASSWORD` / `RABBITMQ_PASSWORD` | Obligatorias (`:?` en el compose), sin default. |
-| `MIGRATIONS_PATH` | Ruta del host al checkout del repo de migraciones (`db/migrations`, ver sección "Base de datos"). Si apunta ahí, Postgres las aplica solo en el primer arranque (volumen de datos vacío); sin definir, monta `./migrations` (vacía) y el Postgres queda sin esquema. |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_ROLE` | Opcionales. Si se definen, `seed-admin.sh` crea ese `SuperUsuario` (o el rol que se indique) en el primer arranque de Postgres — ver "Alta del primer usuario" más arriba. Sin definir, no se crea ningún usuario. |
+| `MIGRATIONS_PATH` | Ruta del host al checkout del repo separado de migraciones (`db/migrations`, ver sección "Base de datos"). El servicio `migrate` las aplica enteras en cada `up`; sin definir, monta `./migrations` (vacía) y el Postgres queda sin esquema. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_ROLE` | Opcionales. Si se definen, `seed-admin.sh` crea ese `SuperUsuario` (o el rol que se indique) si todavía no existe — ver "Alta del primer usuario" más arriba. Sin definir, no se crea ningún usuario. |
 | `POSTGRES_PORT` / `RABBITMQ_PORT` / `RABBITMQ_MANAGEMENT_PORT` / `MIDDLEWARE_PORT` | Puertos publicados en el host. |
-| `POSTGRES_CONTAINER_NAME` / `RABBITMQ_CONTAINER_NAME` / `MIDDLEWARE_CONTAINER_NAME` | Nombres de contenedor (default `knapp-postgres` / `knapp-rabbitmq` / `knapp-middleware`). Cambiarlos si el host ya tiene contenedores con esos nombres (p. ej. el stack de infra real corriendo en paralelo). |
+| `POSTGRES_CONTAINER_NAME` / `RABBITMQ_CONTAINER_NAME` / `MIGRATE_CONTAINER_NAME` / `ADMIN_SEED_CONTAINER_NAME` / `MIDDLEWARE_CONTAINER_NAME` | Nombres de contenedor (default `knapp-postgres` / `knapp-rabbitmq` / `knapp-migrate` / `knapp-admin-seed` / `knapp-middleware`). Cambiarlos si el host ya tiene contenedores con esos nombres (p. ej. el stack de infra real corriendo en paralelo). |
 
 RabbitMQ se levanta con usuario/password propios, pero el middleware los lee en caliente desde la
 tabla `configuracion` (no desde variables de entorno) — tras el primer `up`, configurar

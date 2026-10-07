@@ -9,15 +9,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
     volumes:
       - knapp_postgres_data:/var/lib/postgresql/data
-      # Las migraciones SQL viven en un repo aparte (ver README, seccion "Migraciones"). Si MIGRATIONS_PATH
-      # apunta al checkout local de ese repo (carpeta db/migrations), Postgres las aplica en el primer
-      # arranque; sin definir, monta esta carpeta vacia y el Postgres queda sin esquema.
-      #
-      # Ojo: /docker-entrypoint-initdb.d queda bind-mount de un directorio externo completo (:ro) -
-      # no se le puede anidar un segundo bind de archivo suelto encima (Docker no puede crear el
-      # mountpoint dentro de un bind-mount ya de solo lectura). Por eso el seed de admin (seed-admin.sh)
-      # corre como servicio aparte (ver "admin-seed" mas abajo), no montado aqui.
-      - ${MIGRATIONS_PATH:-./migrations}:/docker-entrypoint-initdb.d:ro
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
@@ -48,16 +39,43 @@ services:
       timeout: 5s
       retries: 10
 
+  # De un solo uso, re-ejecutado en cada "up": aplica entero el repo separado de migraciones
+  # (db/migrations, ver README seccion "Base de datos") contra "postgres" ya healthy. Idempotente
+  # por diseno de las migraciones mismas, asi que cubre tanto el primer despliegue (volumen vacio)
+  # como un redeploy sobre un volumen que ya tiene datos y le faltan migraciones nuevas — algo que
+  # docker-entrypoint-initdb.d nunca resuelve (Postgres solo lo corre una vez, al crear el volumen).
+  migrate:
+    image: postgres:16-alpine
+    container_name: ${MIGRATE_CONTAINER_NAME:-knapp-migrate}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-iadministrator}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      PGDATABASE: ${POSTGRES_DB:-Middleware}
+    volumes:
+      - ./apply-migrations.sh:/apply-migrations.sh:ro
+      # Checkout local del repo separado de migraciones. Sin definir, monta esta carpeta vacia
+      # (el script lo detecta y no falla, pero Postgres queda sin esquema).
+      - ${MIGRATIONS_PATH:-./migrations}:/migrations:ro
+    entrypoint: ["/bin/sh", "/apply-migrations.sh"]
+    restart: "no"
+    networks:
+      - knapp_net
+
   # Seed opcional, de un solo uso: crea el primer SuperUsuario (sp_crear_usuario, 0017_usuarios_gestion.sql)
-  # si ADMIN_USERNAME/ADMIN_PASSWORD vienen en .env. Corre por red contra "postgres" ya healthy (no
-  # anidado en su /docker-entrypoint-initdb.d, ver comentario en ese servicio) e idempotente: se puede
-  # re-ejecutar en cada "up" sin duplicar el usuario (el script valida existencia antes del CALL).
+  # si ADMIN_USERNAME/ADMIN_PASSWORD vienen en .env. Idempotente: se puede re-ejecutar en cada "up"
+  # sin duplicar el usuario (el script valida existencia antes del CALL). Depende de "migrate" (no solo
+  # de postgres healthy) porque sp_crear_usuario no existe hasta que corre 0017_usuarios_gestion.sql.
   admin-seed:
     image: postgres:16-alpine
     container_name: ${ADMIN_SEED_CONTAINER_NAME:-knapp-admin-seed}
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       PGHOST: postgres
       PGPORT: 5432
@@ -76,18 +94,23 @@ services:
 
   middleware:
     build:
-      context: ..
-      dockerfile: Cohen-KnappMiddleware/Dockerfile
+      # Cohen-KnappMiddleware/ vive en la raiz del repo, junto a KnappMiddleware/ (proyecto .NET) y
+      # db/ (migraciones, repo aparte) — no dentro del codigo del proyecto. El contexto del build
+      # tiene que ser la carpeta del .csproj; el Dockerfile queda fuera de ese contexto (BuildKit lo
+      # soporta via ruta relativa que sale del contexto).
+      context: ../KnappMiddleware
+      dockerfile: ../Cohen-KnappMiddleware/Dockerfile
     container_name: ${MIDDLEWARE_CONTAINER_NAME:-knapp-middleware}
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      # Sin esto, admin-seed y middleware arrancan en paralelo (ambos solo dependen de postgres
-      # healthy) y el Gate de usuarios puede cargar su snapshot vacio ANTES de que el seed inserte
-      # el admin — hay que esperar a que admin-seed termine, no solo a que postgres este listo.
+      # migrate (esquema) antes que admin-seed (sp_crear_usuario) antes que middleware: sin esto,
+      # arrancarian en paralelo (todos dependen solo de postgres healthy) y el Gate de usuarios
+      # podria cargar su snapshot vacio ANTES de que el seed inserte el admin, o el seed podria
+      # correr antes de que exista sp_crear_usuario.
+      migrate:
+        condition: service_completed_successfully
       admin-seed:
         condition: service_completed_successfully
     environment:

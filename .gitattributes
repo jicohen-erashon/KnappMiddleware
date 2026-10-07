@@ -1,0 +1,7 @@
+# Estos archivos corren dentro de contenedores Linux o los interpreta Docker directamente: un CRLF
+# (que Windows mete solo via core.autocrlf, sin esto) los rompe en runtime (ej. "/bin/sh: not found")
+# sin que se note hasta ejecutarlos. Fuerza LF sin importar la config del checkout local.
+*.sh text eol=lf
+Dockerfile* text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

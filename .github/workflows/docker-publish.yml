@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: KnappMiddleware
-          file: KnappMiddleware/Cohen-KnappMiddleware/Dockerfile
+          file: Cohen-KnappMiddleware/Dockerfile
           push: true
           tags: |
             ${{ secrets.REGISTRY_HOST }}/knapp-middleware:${{ github.ref_name }}
