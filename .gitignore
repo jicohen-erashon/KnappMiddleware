@@ -40,3 +40,10 @@ transporte/*
 .env.*
 !.env.example
 
+# Red de seguridad: si alguien arma aqui dentro un handoff de credenciales reales para el equipo de
+# deploy (ej. environment-dev-REAL.md), que quede afuera por convencion de nombre, igual que .env.
+# El handoff real nunca deberia vivir dentro del repo de todos modos (ver scripts/deploy/environment-dev.md,
+# que es la plantilla segura con placeholders).
+*-REAL.*
+*.secrets.*
+
