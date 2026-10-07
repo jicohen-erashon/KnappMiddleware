@@ -1,0 +1,157 @@
+name: Desplegar KnappMiddleware
+
+# ============================================================
+# TRIGGERS
+# ============================================================
+# - Push a develop: construye la imagen, la publica en el registry (srv-bidev:5000) y despliega a
+#   DEV. Hoy develop ES el ambiente de deploy (sandbox controlado) — cuando exista un flujo
+#   release/main hacia QA/PRD, ajustar la rama disparadora y agregar esos ambientes a `options`.
+# - Manual (workflow_dispatch): despliega el ambiente elegido. Con `image_tag` vacio construye el
+#   commit seleccionado; con un tag ya publicado (p. ej. sha-0123456789ab) solo lo redespliega sin
+#   construir nada, que es tambien la forma de volver a una version anterior.
+#
+# Reemplaza a docker-publish.yml: ese workflow publicaba en cada push sin desplegar nada; con
+# deploy automatico en cada push a develop, un "solo publish" aparte quedaria redundante.
+#
+# db/migrations vive en este mismo repo (ver commit "Fusionar db/..."): el unico checkout de este
+# workflow ya trae codigo + migraciones en el mismo commit, sin pasos de sincronizacion aparte.
+# ============================================================
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente destino (tambien nombre del GitHub Environment)'
+        required: true
+        type: choice
+        options:
+          - dev
+        default: dev
+      image_tag:
+        description: 'Tag ya publicado para redesplegar (ej. sha-0123456789ab). Vacio = construir este commit'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY_HOST: srv-bidev:5000
+  IMAGE_NAME: knapp-middleware
+
+jobs:
+  # Rechaza cualquier disparo que no venga de develop, con un mensaje claro.
+  guard:
+    name: Validar rama
+    runs-on: [self-hosted, knapp-middleware, srv-bidev]
+    steps:
+      - name: Solo se despliega desde develop
+        shell: powershell
+        env:
+          # Por entorno y no interpolado en el script: el valor lo escribe quien lanza el workflow.
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          if ($env:GITHUB_REF -ne 'refs/heads/develop') {
+            throw "Solo se despliega desde la rama develop (se recibio '$env:GITHUB_REF'). Lanza el workflow eligiendo la rama develop."
+          }
+          if ($env:IMAGE_TAG -and $env:IMAGE_TAG -notmatch '^[A-Za-z0-9_.-]+$') {
+            throw "image_tag '$env:IMAGE_TAG' no es valido: solo letras, numeros, '.', '_' y '-'."
+          }
+
+  publish:
+    name: Construir y publicar la imagen
+    needs: guard
+    if: ${{ inputs.image_tag == '' }}
+    runs-on: [self-hosted, knapp-middleware, srv-bidev]
+    timeout-minutes: 30
+    # Da acceso a las credenciales del registry del ambiente.
+    environment: ${{ inputs.environment || 'dev' }}
+    outputs:
+      image_ref: ${{ steps.ref.outputs.image_ref }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Calcular el tag de la imagen
+        id: ref
+        shell: powershell
+        run: |
+          $tag = 'sha-' + $env:GITHUB_SHA.Substring(0, 12)
+          $ref = '{0}/{1}:{2}' -f $env:REGISTRY_HOST, $env:IMAGE_NAME, $tag
+          # Sin BOM: Out-File -Encoding utf8 lo agrega en PowerShell 5.1 y corrompe la primera clave.
+          [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "image_ref=$ref`n", (New-Object System.Text.UTF8Encoding($false)))
+          Write-Host "Imagen: $ref"
+
+      - name: Construir y publicar
+        shell: powershell
+        env:
+          IMAGE_REF: ${{ steps.ref.outputs.image_ref }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER || vars.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD || vars.REGISTRY_PASSWORD }}
+        run: |
+          & "$env:GITHUB_WORKSPACE\scripts\deploy\publish.ps1" `
+            -ImageRef $env:IMAGE_REF `
+            -Revision $env:GITHUB_SHA `
+            -Source "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY"
+
+  deploy:
+    name: Desplegar a ${{ inputs.environment || 'dev' }}
+    needs: [guard, publish]
+    # Con image_tag no hay build (publish se omite); sin el, solo si publish termino bien.
+    if: ${{ always() && needs.guard.result == 'success' && (needs.publish.result == 'success' || inputs.image_tag != '') }}
+    runs-on: [self-hosted, knapp-middleware, srv-bidev]
+    timeout-minutes: 30
+    environment: ${{ inputs.environment || 'dev' }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Desplegar
+        shell: powershell
+        env:
+          TARGET_ENV: ${{ inputs.environment || 'dev' }}
+          IMAGE_REF: ${{ needs.publish.outputs.image_ref || format('{0}/{1}:{2}', env.REGISTRY_HOST, env.IMAGE_NAME, inputs.image_tag) }}
+          # Cada valor puede estar definido como secreto o como variable del Environment.
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER || vars.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD || vars.REGISTRY_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB || vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER || vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || vars.POSTGRES_PASSWORD }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT || vars.POSTGRES_PORT }}
+          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER || vars.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD || vars.RABBITMQ_PASSWORD }}
+          RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT || vars.RABBITMQ_PORT }}
+          RABBITMQ_MANAGEMENT_PORT: ${{ secrets.RABBITMQ_MANAGEMENT_PORT || vars.RABBITMQ_MANAGEMENT_PORT }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || vars.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || vars.ADMIN_PASSWORD }}
+          ADMIN_ROLE: ${{ secrets.ADMIN_ROLE || vars.ADMIN_ROLE }}
+          MIDDLEWARE_PORT: ${{ secrets.MIDDLEWARE_PORT || vars.MIDDLEWARE_PORT }}
+          LOKI_ENDPOINT: ${{ secrets.LOKI_ENDPOINT || vars.LOKI_ENDPOINT }}
+        run: |
+          & "$env:GITHUB_WORKSPACE\scripts\deploy\deploy.ps1" `
+            -Environment $env:TARGET_ENV `
+            -ImageRef $env:IMAGE_REF
+
+      - name: Resumen
+        if: success()
+        shell: powershell
+        env:
+          TARGET_ENV: ${{ inputs.environment || 'dev' }}
+          IMAGE_REF: ${{ needs.publish.outputs.image_ref || format('{0}/{1}:{2}', env.REGISTRY_HOST, env.IMAGE_NAME, inputs.image_tag) }}
+        run: |
+          $lines = @(
+            "### Despliegue a $env:TARGET_ENV",
+            '',
+            ('- Imagen: `{0}`' -f $env:IMAGE_REF),
+            ('- Commit: `{0}`' -f $env:GITHUB_SHA)
+          )
+          [System.IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))

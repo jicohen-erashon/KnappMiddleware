@@ -93,9 +93,14 @@ services:
       - knapp_net
 
   middleware:
+    # image + build conviven: "docker compose up --build" (dev local) construye y usa esta imagen
+    # tag; en deploy, scripts/deploy/publish.ps1 ya construyo y publico esa misma imagen al registry
+    # con el tag real (sha-<commit>) via MIDDLEWARE_IMAGE, y deploy.ps1 corre "up" SIN --build, que
+    # usa directamente la imagen descargada sin reconstruir nada en el servidor.
+    image: ${MIDDLEWARE_IMAGE:-knapp-middleware-local}
     build:
       # Cohen-KnappMiddleware/ vive en la raiz del repo, junto a KnappMiddleware/ (proyecto .NET) y
-      # db/ (migraciones, repo aparte) — no dentro del codigo del proyecto. El contexto del build
+      # db/ (migraciones, mismo repo) — no dentro del codigo del proyecto. El contexto del build
       # tiene que ser la carpeta del .csproj; el Dockerfile queda fuera de ese contexto (BuildKit lo
       # soporta via ruta relativa que sale del contexto).
       context: ../KnappMiddleware
