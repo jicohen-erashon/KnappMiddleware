@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+.vscode/
+.git/
+.github/
+.claude/
+.impeccable/
+db/
+logs/
+*.user
+*.http
+Dockerfile
+.dockerignore
+docker-compose*.yml
+.env
+.env.*

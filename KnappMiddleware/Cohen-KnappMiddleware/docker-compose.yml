@@ -1,0 +1,117 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${POSTGRES_CONTAINER_NAME:-knapp-postgres}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-Middleware}
+      POSTGRES_USER: ${POSTGRES_USER:-iadministrator}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    volumes:
+      - knapp_postgres_data:/var/lib/postgresql/data
+      # Las migraciones SQL viven en un repo aparte (ver README, seccion "Migraciones"). Si MIGRATIONS_PATH
+      # apunta al checkout local de ese repo (carpeta db/migrations), Postgres las aplica en el primer
+      # arranque; sin definir, monta esta carpeta vacia y el Postgres queda sin esquema.
+      #
+      # Ojo: /docker-entrypoint-initdb.d queda bind-mount de un directorio externo completo (:ro) -
+      # no se le puede anidar un segundo bind de archivo suelto encima (Docker no puede crear el
+      # mountpoint dentro de un bind-mount ya de solo lectura). Por eso el seed de admin (seed-admin.sh)
+      # corre como servicio aparte (ver "admin-seed" mas abajo), no montado aqui.
+      - ${MIGRATIONS_PATH:-./migrations}:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - knapp_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iadministrator} -d ${POSTGRES_DB:-Middleware}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: ${RABBITMQ_CONTAINER_NAME:-knapp-rabbitmq}
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-knapp}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Define RABBITMQ_PASSWORD en .env}
+    volumes:
+      - knapp_rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    networks:
+      - knapp_net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Seed opcional, de un solo uso: crea el primer SuperUsuario (sp_crear_usuario, 0017_usuarios_gestion.sql)
+  # si ADMIN_USERNAME/ADMIN_PASSWORD vienen en .env. Corre por red contra "postgres" ya healthy (no
+  # anidado en su /docker-entrypoint-initdb.d, ver comentario en ese servicio) e idempotente: se puede
+  # re-ejecutar en cada "up" sin duplicar el usuario (el script valida existencia antes del CALL).
+  admin-seed:
+    image: postgres:16-alpine
+    container_name: ${ADMIN_SEED_CONTAINER_NAME:-knapp-admin-seed}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-iadministrator}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      PGDATABASE: ${POSTGRES_DB:-Middleware}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_ROLE: ${ADMIN_ROLE:-SuperUsuario}
+    volumes:
+      - ./seed-admin.sh:/seed-admin.sh:ro
+    entrypoint: ["/bin/sh", "/seed-admin.sh"]
+    restart: "no"
+    networks:
+      - knapp_net
+
+  middleware:
+    build:
+      context: ..
+      dockerfile: Cohen-KnappMiddleware/Dockerfile
+    container_name: ${MIDDLEWARE_CONTAINER_NAME:-knapp-middleware}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      # Sin esto, admin-seed y middleware arrancan en paralelo (ambos solo dependen de postgres
+      # healthy) y el Gate de usuarios puede cargar su snapshot vacio ANTES de que el seed inserte
+      # el admin — hay que esperar a que admin-seed termine, no solo a que postgres este listo.
+      admin-seed:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      # Unica config que vive en appsettings (el resto esta en la tabla `configuracion`, ver WireUp.cs).
+      # RabbitMq/SFTP/canales KiSoft/webhook SAP se configuran despues, via POST /api/v1/config/reload
+      # (hostName de RabbitMq dentro de esta red: "rabbitmq").
+      Postgres__ConnectionString: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-Middleware};Username=${POSTGRES_USER:-iadministrator};Password=${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}"
+      FileLogging__BasePath: /app/logs
+      # Program.cs lee esta variable antes que Loki:Endpoint de appsettings.
+      __GRAFANA_LOKI_URL__: ${LOKI_ENDPOINT:-http://srv-bidev:3100}
+    ports:
+      - "${MIDDLEWARE_PORT:-5231}:8080"
+    volumes:
+      - knapp_logs:/app/logs
+    networks:
+      - knapp_net
+
+volumes:
+  knapp_logs:
+  knapp_postgres_data:
+  knapp_rabbitmq_data:
+
+networks:
+  # Red propia de este compose: nada externo (Postgres/RabbitMQ se levantan aqui mismo).
+  knapp_net:
+    driver: bridge

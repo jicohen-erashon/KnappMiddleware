@@ -1,0 +1,36 @@
+name: Build y publicar imagen Docker
+
+# Dispara en push a las ramas de GitFlow que deben llegar al registry. Ajustar si el flujo real
+# solo quiere construir en alguna de ellas (p. ej. solo release/main).
+on:
+  push:
+    branches: [develop, release, main]
+
+jobs:
+  build-and-push:
+    # Runner self-hosted asumido: el registry es privado/on-prem (no alcanzable desde los runners
+    # hospedados por GitHub sin VPN). Cambiar a `ubuntu-latest` si el registry es accesible desde
+    # internet o si hay un paso de red (VPN/tailscale) antes de este job.
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login al registry
+        # Si el registry acepta push anonimo, borrar este step y los secrets REGISTRY_USERNAME/PASSWORD.
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build y push
+        uses: docker/build-push-action@v5
+        with:
+          context: KnappMiddleware
+          file: KnappMiddleware/Cohen-KnappMiddleware/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_HOST }}/knapp-middleware:${{ github.ref_name }}
+            ${{ secrets.REGISTRY_HOST }}/knapp-middleware:${{ github.sha }}

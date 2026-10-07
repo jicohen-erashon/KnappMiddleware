@@ -39,3 +39,8 @@ db/*
 transporte/
 transporte/*
 
+# Docker: variables de entorno con credenciales reales (usar .env.example como plantilla)
+.env
+.env.*
+!.env.example
+
