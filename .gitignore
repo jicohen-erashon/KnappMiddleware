@@ -31,10 +31,6 @@ JSON-SAP/*
 
 CONTEXT.md
 
-# Migraciones/SQL: repo separado (db/), nunca en el repo de la app (puede llevar credenciales de infra)
-db/
-db/*
-
 # Backups/dumps SQL para transporte entre ambientes (contiene hashes de contrasena reales)
 transporte/
 transporte/*
